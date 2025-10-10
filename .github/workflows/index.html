@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototype – Sistem Imunisasi Anak v1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l8 8'/%3E%3Cpath d='M15 5l4 4'/%3E%3Cpath d='M5 20l6-6'/%3E%3Cpath d='M16 7l1.5-1.5a2.121 2.121 0 013 3L19 9'/%3E%3Cpath d='M7 17L3 21'/%3E%3Cpath d='M8 12l4 4'/%3E%3Crect x='8' y='8' width='6' height='2' transform='rotate(45 8 8)'/%3E%3C/svg%3E" />
+  <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    .card{background:#fff;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.05)}
+    .badge{font-size:.75rem;line-height:1rem;padding:.25rem .75rem;border-radius:9999px;font-weight:600;display:inline-block;border-width:1px}
+    .b-green{background:#ecfdf5;color:#047857;border-color:#bbf7d0}
+    .b-amber{background:#fffbeb;color:#b45309;border-color:#fde68a}
+    .b-red{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+    .btn{padding:.65rem .9rem;border-radius:.75rem;font-weight:600}
+    .btn-primary{background:#4f46e5;color:#fff}
+    .btn-primary:hover{background:#4338ca}
+    .btn-ghost{background:#f1f5f9;color:#334155}
+    .btn-ghost:hover{background:#e2e8f0}
+    [data-view]{display:none}
+    [data-view].active{display:block}
+    .row-form{display:none}
+    .row-form.show{display:block}
+  </style>
+</head>
+<body class="bg-slate-50">
+
+<!-- HOME -->
+<section id="view-home" data-view class="active max-w-xl mx-auto px-5 py-10">
+  <div class="text-center mb-10">
+    <div class="h-16 w-16 mx-auto rounded-full bg-indigo-50 grid place-items-center text-indigo-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Syringe icon">
+        <path d="M10 6l8 8"/>
+        <path d="M15 5l4 4"/>
+        <path d="M5 20l6-6"/>
+        <path d="M16 7l1.5-1.5a2.121 2.121 0 013 3L19 9"/>
+        <path d="M7 17L3 21"/>
+        <path d="M8 12l4 4"/>
+        <rect x="8" y="8" width="6" height="2" transform="rotate(45 8 8)"/>
+      </svg>
+    </div>
+    <h1 class="mt-4 text-3xl font-extrabold text-slate-900">Sistem Imunisasi Anak</h1>
+    <p class="text-slate-500">Input NIK untuk memulai pencatatan</p>
+  </div>
+
+  <div class="card p-6">
+    <label class="block text-slate-700 font-semibold">Nomor Induk Kependudukan (NIK)</label>
+    <div class="mt-2">
+      <input id="nikInput" maxlength="16" inputmode="numeric" class="w-full px-4 py-4 rounded-xl border border-slate-200" placeholder="Masukkan 16 digit NIK" />
+      <div class="text-xs text-slate-400 mt-1"><span id="nikCount">0</span>/16 digit</div>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button id="btnCari" class="btn btn-primary flex-1">Cari Data</button>
+      <button id="btnTambahBaru" class="btn btn-ghost" title="Registrasi cepat anak baru">+</button>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section id="view-register" data-view class="max-w-xl mx-auto px-5 py-6">
+  <div class="flex items-center gap-3 text-slate-700 mb-4">
+    <button class="p-2 -ml-2 hover:bg-slate-100 rounded-full" onclick="nav('home')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <span>Kembali</span>
+  </div>
+  <h2 class="text-3xl font-extrabold text-slate-900">Registrasi Anak Baru</h2>
+  <p class="text-slate-500" id="reg-nik">NIK: -</p>
+
+  <div class="card p-6 mt-4">
+    <label class="block text-slate-700 font-semibold">Nama Lengkap Anak <span class="text-rose-600">*</span></label>
+    <input id="reg-name" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200" placeholder="Masukkan nama lengkap"/>
+
+    <div class="grid grid-cols-2 gap-3 mt-4">
+      <div>
+        <label class="block text-slate-700 font-semibold">Tanggal Lahir <span class="text-rose-600">*</span></label>
+        <input id="reg-dob" type="date" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200"/>
+        <p id="reg-usia" class="text-sm text-slate-500 mt-1">Usia: -</p>
+      </div>
+      <div>
+        <label class="block text-slate-700 font-semibold">Jenis Kelamin</label>
+        <select id="reg-sex" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200">
+          <option value="M">Laki-laki</option>
+          <option value="F">Perempuan</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="block text-slate-700 font-semibold mt-4">Nama Orang Tua / Wali <span class="text-rose-600">*</span></label>
+    <input id="reg-parent" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200" placeholder="Masukkan nama orang tua"/>
+
+    <button id="btnSimpanReg" class="btn btn-primary w-full mt-5">Simpan Data</button>
+  </div>
+</section>
+
+<!-- CHILD DASHBOARD -->
+<section id="view-child" data-view class="pb-28">
+  <div class="bg-indigo-500 text-white">
+    <div class="max-w-xl mx-auto px-5 py-4 flex items-center gap-3">
+      <button onclick="nav('home')" class="p-2 -ml-2 hover:bg-white/10 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span>Kembali</span>
+    </div>
+    <div class="max-w-xl mx-auto px-5 pb-6">
+      <div class="flex items-center gap-4">
+        <div class="h-14 w-14 rounded-full bg-white/20 grid place-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Syringe icon">
+            <path d="M10 6l8 8"/>
+            <path d="M15 5l4 4"/>
+            <path d="M5 20l6-6"/>
+            <path d="M16 7l1.5-1.5a2.121 2.121 0 013 3L19 9"/>
+            <path d="M7 17L3 21"/>
+            <path d="M8 12l4 4"/>
+            <rect x="8" y="8" width="6" height="2" transform="rotate(45 8 8)"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h1 id="c-name" class="text-2xl font-semibold leading-tight">-</h1>
+          <p id="c-meta" class="text-sm text-white/90">-</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-xl mx-auto px-5 -mt-6">
+    <div class="grid grid-cols-3 gap-3">
+      <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-green-100 text-green-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div id="s-done" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Selesai</div></div>
+      <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-amber-100 text-amber-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div id="s-due" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Jatuh Tempo</div></div>
+      <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-rose-100 text-rose-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6m0-6l6 6"/></svg></div><div id="s-late" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Terlambat</div></div>
+    </div>
+
+    <section class="mt-5 card">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <h2 class="font-semibold text-slate-800">Status Imunisasi</h2>
+      </div>
+      <!-- Kelengkapan Program (tanpa "Yang masih kurang") -->
+      <div id="program-completeness" class="px-5 py-4 border-b border-slate-100">
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between"><span class="text-slate-600">IDL (0–11 bln)</span><span id="chip-idl" class="badge b-amber">Belum Lengkap</span></div>
+          <div class="flex items-center justify-between"><span class="text-slate-600">IBL (12–24 bln)</span><span id="chip-ibl" class="badge b-amber">Belum Lengkap</span></div>
+          <div class="flex items-center justify-between"><span class="text-slate-600">BIAS (Sekolah)</span><span id="chip-bias" class="badge b-amber">Belum Lengkap</span></div>
+          <div class="flex items-center justify-between"><span class="text-slate-600">IRL (mengikuti usia)</span><span id="chip-irl" class="badge b-amber">Belum Lengkap</span></div>
+        </div>
+      </div>
+
+      <div id="vax-list" class="divide-y divide-slate-100"></div>
+    </section>
+
+    <section class="mt-5 card">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <h2 class="font-semibold text-slate-800">Riwayat Penimbangan</h2>
+        <button id="btnAddMeasure" class="btn btn-primary">+ Tambah</button>
+      </div>
+      <div id="measure-list" class="p-5">
+        <p class="text-slate-500 text-sm">Belum ada riwayat penimbangan</p>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- VIEW: PENIMBANGAN INPUT -->
+<section id="view-weigh" data-view class="max-w-xl mx-auto px-5 py-6">
+  <div class="flex items-center gap-3 text-slate-700 mb-4">
+    <button class="p-2 -ml-2 hover:bg-slate-100 rounded-full" onclick="nav('child')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <span>Kembali</span>
+  </div>
+  <h2 class="text-3xl font-extrabold text-slate-900">Input Penimbangan</h2>
+  <p class="text-slate-500" id="w-child">-</p>
+
+  <div class="card p-6 mt-4">
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-slate-700 font-semibold">Tanggal Penimbangan</label>
+        <input id="w-date" type="date" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200"/>
+      </div>
+      <div>
+        <label class="block text-slate-700 font-semibold">Jenis Kelamin</label>
+        <select id="w-sex" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200">
+          <option value="M">Laki-laki</option>
+          <option value="F">Perempuan</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="block text-slate-700 font-semibold mt-4">Berat Badan (kg)</label>
+    <input id="w-weight" type="number" min="0" step="0.1" placeholder="Contoh: 5.2" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200"/>
+
+    <label class="block text-slate-700 font-semibold mt-4">Tinggi Badan (cm)</label>
+    <input id="w-height" type="number" min="0" step="0.1" placeholder="Contoh: 65.5" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200"/>
+
+    <div class="mt-3 rounded-xl bg-slate-100 p-4 text-slate-600 text-sm">
+      <div>Usia anak: <b id="w-age">-</b></div>
+      <div>IMT: <b id="w-bmi">-</b></div>
+      <div class="text-slate-500">Z-score WHO (BB/U, TB/U, IMT/U): <b id="w-z">-</b></div>
+    </div>
+
+    <button id="w-save" class="btn btn-primary w-full mt-5">⚖️ Simpan Penimbangan</button>
+  </div>
+</section>
+
+<script>
+// ====== DB MOCK ======
+const DB = {
+  children: {
+    '3574015706250002': { nik:'3574015706250002', name:'Bambang', parent:'Bambang Sr', dob:'2025-07-06', sex:'M', records:{ bcg1: '2025-06-17' }, measures: [], isStudentSD:false }
+  },
+  batches: {
+    bcg1: [ {code:'BCG-A01', exp:'2026-12-31', active:true, dosesRemaining:10}, {code:'BCG-B02', exp:'2025-05-30', active:false, dosesRemaining:0} ],
+    hb0_1: [ {code:'HBO-771', exp:'2025-11-15', active:true, dosesRemaining:3} ],
+    opv1: [ {code:'OPV-992', exp:'2026-04-01', active:true, dosesRemaining:8} ],
+    opv2: [ {code:'OPV-992', exp:'2026-04-01', active:true, dosesRemaining:8} ],
+    opv3: [ {code:'OPV-992', exp:'2026-04-01', active:true, dosesRemaining:8} ],
+    opv4: [ {code:'OPV-992', exp:'2026-04-01', active:true, dosesRemaining:8} ],
+    pentabio1: [ {code:'PENTA-55', exp:'2025-12-30', active:true, dosesRemaining:5} ],
+    pentabio2: [ {code:'PENTA-55', exp:'2025-12-30', active:true, dosesRemaining:5} ],
+    pentabio3: [ {code:'PENTA-55', exp:'2025-12-30', active:true, dosesRemaining:5} ],
+    pcv1: [ {code:'PCV-101', exp:'2026-03-01', active:true, dosesRemaining:6} ],
+    pcv2: [ {code:'PCV-101', exp:'2026-03-01', active:true, dosesRemaining:6} ],
+    rota1: [ {code:'ROTA-77', exp:'2025-10-30', active:true, dosesRemaining:2} ],
+    ipv1:  [ {code:'IPV-33',  exp:'2026-05-05', active:true, dosesRemaining:4} ],
+    pentabio4:     [ {code:'PENTA-99',exp:'2026-12-31', active:true, dosesRemaining:8} ],
+   rota2:[{code:'ROTA-78',exp:'2026-10-30',active:true,dosesRemaining:5}],
+  rota3:[{code:'ROTA-79',exp:'2026-12-30',active:true,dosesRemaining:5}],
+  pcv3: [{code:'PCV-202',exp:'2027-03-01',active:true,dosesRemaining:6}],
+  ipv2: [{code:'IPV-44', exp:'2027-05-05',active:true,dosesRemaining:4}],
+  mr1:  [{code:'MR-091', exp:'2027-01-31',active:true,dosesRemaining:12}],
+  mr2:  [{code:'MR-182', exp:'2027-02-28',active:true,dosesRemaining:10}],
+  je1:  [{code:'JE-001', exp:'2027-08-31',active:true,dosesRemaining:8}],
+  mr_school:   [{code:'MR-SCH',  exp:'2028-06-30',active:true,dosesRemaining:50}],
+  dt_school:   [{code:'DT-SCH',  exp:'2028-06-30',active:true,dosesRemaining:50}],
+  td_school_2: [{code:'TD-CLS2', exp:'2028-06-30',active:true,dosesRemaining:50}],
+  td_school_5: [{code:'TD-CLS5', exp:'2028-06-30',active:true,dosesRemaining:50}],
+  hpv_kls5:    [{code:'HPV-5F',  exp:'2028-12-31',active:true,dosesRemaining:50}]
+  }
+};
+
+// ====== RULES (disingkat) ======
+const RULES = [
+  // RUTIN — Bayi/BBL/SI
+  { id:'hb0_1',     label:'Hepatitis B-0 (HBo) – Dosis 1',                ideal:{hours:24}, notAfterDays:7 },
+
+  { id:'bcg1',      label:'BCG – Dosis 1',                                 ideal:{months:1},  catchupUntilMonths:11 },
+
+  // OPV (0–4 bln), kejar s.d 59 bln
+  { id:'opv1',      label:'Polio (OPV) – Dosis 1',                         ideal:{months:1},  catchupUntilMonths:59 },
+  { id:'opv2',      label:'Polio (OPV) – Dosis 2',                         ideal:{months:2},  catchupUntilMonths:59 },
+  { id:'opv3',      label:'Polio (OPV) – Dosis 3',                         ideal:{months:3},  catchupUntilMonths:59 },
+  { id:'opv4',      label:'Polio (OPV) – Dosis 4',                         ideal:{months:4},  catchupUntilMonths:59 },
+
+  // DPT–HB–Hib (Pentabio) 1–3 (2,3,4 bln), kejar s.d 59 bln
+  { id:'pentabio1', label:'DPT–HB–Hib (Pentabio) – Dosis 1',               ideal:{months:2},  catchupUntilMonths:59 },
+  { id:'pentabio2', label:'DPT–HB–Hib (Pentabio) – Dosis 2',               ideal:{months:3},  catchupUntilMonths:59 },
+  { id:'pentabio3', label:'DPT–HB–Hib (Pentabio) – Dosis 3',               ideal:{months:4},  catchupUntilMonths:59 },
+
+  // Rotavirus 1–3 (2,3,4 bln) — maksimum <7 bln (tidak boleh setelah 7 bln)
+  { id:'rota1',     label:'Rotavirus – Dosis 1',                           ideal:{months:2},  notAfterMonths:7 },
+  { id:'rota2',     label:'Rotavirus – Dosis 2',                           ideal:{months:3},  notAfterMonths:7 },
+  { id:'rota3',     label:'Rotavirus – Dosis 3',                           ideal:{months:4},  notAfterMonths:7 },
+
+  // PCV 1–2 (2,3 bln) + PCV 3 (12 bln)
+  { id:'pcv1',      label:'PCV – Dosis 1',                                 ideal:{months:2} },
+  { id:'pcv2',      label:'PCV – Dosis 2',                                 ideal:{months:3} },
+  { id:'pcv3',      label:'PCV – Dosis 3',                                 ideal:{months:12} },
+
+  // IPV 1 (4 bln) + IPV 2 (9 bln) — kejar s.d ≥5 th tidak diberikan
+  { id:'ipv1',      label:'IPV – Dosis 1',                                 ideal:{months:4},  notAfterYears:5 },
+  { id:'ipv2',      label:'IPV – Dosis 2',                                 ideal:{months:9},  notAfterYears:5 },
+
+  // MR1 (9 bln) kejar s.d 59 bln
+  { id:'mr1',       label:'Campak Rubella/MR – Dosis 1',                   ideal:{months:9},  catchupUntilMonths:59 },
+
+  // JE* (10 bln) — hanya daerah endemis (opsional)
+  //{ id:'je1',       label:'JE* – Dosis 1 (daerah endemis)',                ideal:{months:10}, optional:true },
+
+  // Baduta (≥18 bln)
+  { id:'pentabio4', label:'DPT–HB–Hib (Pentabio) – Dosis 4 (Booster)',     ideal:{months:18} },
+  { id:'mr2',       label:'Campak Rubella/MR – Dosis 2',                   ideal:{months:18}, notAfterYears:5 },
+
+  // BIAS (Sekolah)
+  { id:'mr_school',   label:'MR (BIAS) – Kelas 1 (≈7 th)',                 ideal:{years:7} },
+  { id:'dt_school',   label:'DT (BIAS) – Kelas 1 (≈7 th)',                 ideal:{years:7},  minGapMonthsFrom:'mr_school', minGapMonths:6 /* catatan: berbeda program, gap min 6 bln */ },
+  { id:'td_school_2', label:'Td (BIAS) – Kelas 2 (≈8 th)',                 ideal:{years:8} },
+  { id:'td_school_5', label:'Td (BIAS) – Kelas 5 (≈11 th)',                ideal:{years:11} },
+
+  // HPV (khusus siswi kelas 5) – tetap kita simpan agar UI mengenali
+  { id:'hpv_kls5',  label:'HPV (BIAS) – Kelas 5 (siswi)',                  ideal:{years:11}, girlsOnly:true }
+];
+
+
+// Kelompok seri untuk validasi interval
+const SERIES = {
+  opv:      ['opv1','opv2','opv3','opv4'],
+  pentabio: ['pentabio1','pentabio2','pentabio3','pentabio4'],
+  pcv:      ['pcv1','pcv2','pcv3'],
+  rota:     ['rota1','rota2','rota3'],
+  ipv:      ['ipv1','ipv2']
+};
+
+
+function seriesInfo(ruleId){
+  for(const [key,arr] of Object.entries(SERIES)){
+    const idx = arr.indexOf(ruleId);
+    if(idx>=0) return {key, arr, idx};
+  }
+  return null;
+}
+function seriesLabel(key){
+  return key==='opv' ? 'OPV'
+       : key==='pentabio' ? 'DPT-HB-Hib (Pentabio)'
+       : key==='pcv' ? 'PCV'
+       : key==='rota' ? 'Rotavirus'
+       : key==='ipv' ? 'IPV'
+       : 'Seri';
+}
+// Validasi interval antar dosis (>= 28 hari) dan urutan
+function validateInterval(ruleId, dateISO){
+  const info = seriesInfo(ruleId);
+  if(!info) return {ok:true};
+  if(info.idx===0) return {ok:true};
+  let prevDate=null;
+  for(let k=info.idx-1;k>=0;k--){
+    const rid=info.arr[k];
+    const rec=(currentChild && currentChild.records) ? currentChild.records[rid] : null;
+    if(rec){ prevDate = (typeof rec==='string')?rec:rec.date; break; }
+  }
+  const label = seriesLabel(info.key);
+  if(!prevDate){
+    return {ok:false, msg:`Tidak bisa menyimpan ${label} dosis ${info.idx+1} sebelum dosis ${info.idx} tercatat.`};
+  }
+  const gap = daysBetween(prevDate,dateISO);
+  if(!isFinite(gap)){
+    return {ok:false, msg:`Tanggal tidak valid. Mohon cek kembali.`};
+  }
+  if(gap < 28){
+    return {ok:false, msg:`Interval antar dosis ${label} minimal 4 minggu (28 hari).\nJarak dari dosis sebelumnya: ${gap} hari.\nDosis sebelumnya: ${fmtID(prevDate)} · Tanggal input: ${fmtID(dateISO)}`};
+  }
+  return {ok:true};
+}
+
+function earliestAllowedDate(rule){
+  const ideal = idealDateFor(rule, currentChild.dob);
+  return (currentChild.dob > ideal) ? currentChild.dob : ideal;
+}
+function validateDateWindow(ruleId, dateISO){
+  const rule = RULES.find(r=>r.id===ruleId);
+  if(!rule) return {ok:true};
+
+  const minDate = earliestAllowedDate(rule);
+
+  if(dateISO < currentChild.dob){
+    return {ok:false, msg:`Tanggal tidak boleh sebelum tanggal lahir (${fmtID(currentChild.dob)}).`};
+  }
+  if(dateISO < minDate){
+    return {ok:false, msg:`Tanggal tidak boleh sebelum jadwal ideal (${fmtID(minDate)}).`};
+  }
+
+  // Batas maksimum usia (opsional per tabel)
+  const add = (iso, {years=0, months=0, days=0})=>{
+    const d=new Date(iso+'T00:00:00');
+    d.setFullYear(d.getFullYear()+years);
+    d.setMonth(d.getMonth()+months);
+    d.setDate(d.getDate()+days);
+    return d.toISOString().slice(0,10);
+  };
+
+  // notAfterDays (sudah dipakai HBo)
+  if(rule.notAfterDays){
+    const maxD = add(currentChild.dob,{days:rule.notAfterDays});
+    if(dateISO > maxD) return {ok:false, msg:`Melewati batas maksimum (${rule.notAfterDays} hari dari lahir).`};
+  }
+
+  // notAfterMonths / Years
+  if(rule.notAfterMonths){
+    const maxM = add(currentChild.dob,{months:rule.notAfterMonths});
+    if(dateISO > maxM) return {ok:false, msg:`Melewati batas maksimum usia (${rule.notAfterMonths} bulan).`};
+  }
+  if(rule.notAfterYears){
+    const maxY = add(currentChild.dob,{years:rule.notAfterYears});
+    if(dateISO > maxY) return {ok:false, msg:`Melewati batas maksimum usia (${rule.notAfterYears} tahun).`};
+  }
+
+  // catchupUntilMonths (boleh sampai X bulan; setelah itu ditolak)
+  if(rule.catchupUntilMonths){
+    const maxC = add(currentChild.dob,{months:rule.catchupUntilMonths});
+    if(dateISO > maxC) return {ok:false, msg:`Melewati batas kejar (${rule.catchupUntilMonths} bulan).`};
+  }
+
+  return {ok:true};
+}
+
+
+const MS_DAY = 24*60*60*1000;
+function daysBetween(aISO,bISO){ return Math.floor((_dUTC(bISO)-_dUTC(aISO))/MS_DAY); }
+
+// ====== UTIL ======
+const byId = id => document.getElementById(id);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtID = iso => new Date(iso+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+function addMonths(iso, m){ const d=new Date(iso+'T00:00:00'); const day=d.getDate(); d.setMonth(d.getMonth()+m); if(d.getDate()<day) d.setDate(0); return d.toISOString().slice(0,10); }
+function addDays(iso, n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function _dUTC(iso){ const [y,m,d]=iso.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); }
+function daysInMonthUTC(y,m){ return new Date(Date.UTC(y,m+1,0)).getUTCDate(); }
+function addMonthsClampUTC(date, months){ let y=date.getUTCFullYear(), m=date.getUTCMonth(), d=date.getUTCDate(); m+=months; y+=Math.floor(m/12); m=(m%12+12)%12; const dim=daysInMonthUTC(y,m); const dd=Math.min(d,dim); return new Date(Date.UTC(y,m,dd)); }
+function diffYMD(fromISO,toISO){
+  const a=_dUTC(fromISO), b=_dUTC(toISO);
+  if(b < a) return {years:0, months:0, days:0};
+  let totalMonths=(b.getUTCFullYear()-a.getUTCFullYear())*12 + (b.getUTCMonth()-a.getUTCMonth());
+  if(b.getUTCDate() < a.getUTCDate()) totalMonths -= 1;
+  const years=Math.floor(totalMonths/12);
+  const months=totalMonths%12;
+  const anchor=addMonthsClampUTC(a,totalMonths);
+  const MS=24*60*60*1000;
+  const days=Math.floor((b - anchor)/MS);
+  return {years, months, days};
+}
+function parseDOBFromNIK(nik){
+  if(!/^[0-9]{16}$/.test(nik)) return null;
+  const dd=parseInt(nik.slice(6,8),10); const mm=parseInt(nik.slice(8,10),10); const yy=parseInt(nik.slice(10,12),10);
+  const female=dd>40; const day=female?dd-40:dd;
+  const now=new Date(); const curYY=now.getFullYear()%100; const fullYear=(yy<=curYY?2000+yy:1900+yy);
+  const pad=n=>String(n).padStart(2,'0');
+  return `${fullYear}-${pad(mm)}-${pad(day)}`;
+}
+function sexFromNIK(nik){ if(!/^[0-9]{16}$/.test(nik)) return 'M'; const dd=parseInt(nik.slice(6,8),10); return dd>40?'F':'M'; }
+function ageLabel(dob,ref=todayISO()){ const {years,months,days}=diffYMD(dob,ref); return `${years} tahun ${months} bulan ${days} hari`; }
+
+// ====== NAV + HOME ======
+byId('nikInput').addEventListener('input',e=>{ byId('nikCount').textContent=e.target.value.length; });
+byId('btnCari').addEventListener('click',()=>{ const nik=byId('nikInput').value.trim(); if(nik.length!==16){ alert('NIK harus 16 digit.'); return; } if(DB.children[nik]){ openChild(nik); } else { openRegister(nik); } });
+byId('btnTambahBaru').addEventListener('click',()=>{ const nik=byId('nikInput').value.padEnd(16,'0').slice(0,16); openRegister(nik); });
+function nav(view){ document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active')); byId(`view-${view}`).classList.add('active'); }
+
+// ====== REGISTER ======
+function openRegister(nik){
+  nav('register');
+  byId('reg-nik').textContent=`NIK: ${nik}`;
+  const dobFromNik=parseDOBFromNIK(nik);
+  byId('reg-dob').value=dobFromNik||'';
+  byId('reg-usia').textContent=dobFromNik?`Usia: ${ageLabel(dobFromNik)}`:'Usia: -';
+  byId('reg-sex').value=sexFromNIK(nik);
+  byId('reg-dob').oninput=()=>{ const v=byId('reg-dob').value; byId('reg-usia').textContent=v?`Usia: ${ageLabel(v)}`:'Usia: -'; };
+  byId('btnSimpanReg').onclick=()=>{ const name=byId('reg-name').value.trim(); const dob=byId('reg-dob').value; const parent=byId('reg-parent').value.trim(); const sex=byId('reg-sex').value; if(!name||!dob||!parent){ alert('Lengkapi semua data.'); return; } DB.children[nik]={nik,name,parent,dob,sex,records:{},measures:[],isStudentSD:false}; openChild(nik); };
+}
+
+// ====== CHILD ======
+let currentChild=null;
+function openChild(nik){ currentChild=DB.children[nik]; nav('child'); renderChildHeader(); renderProgramChips(); renderVaxList(); renderMeasureList(); byId('btnAddMeasure').onclick=()=>openWeigh('visit'); }
+function renderChildHeader(){ const c=currentChild; const sexLabel=c.sex==='F'?'Perempuan':'Laki-laki'; byId('c-name').textContent=c.name||'-'; byId('c-meta').textContent=`NIK: ${c.nik} · JK: ${sexLabel} · Usia: ${ageLabel(c.dob)} · Orang Tua: ${c.parent||'-'}`; }
+
+function idealDateFor(rule, dob){ if(rule.ideal?.hours){ return dob; } const months=rule.ideal?.months||0; const years=rule.ideal?.years? rule.ideal.years*12 : 0; return addMonths(dob, months+years); }
+
+function statusFor(rule){
+  const rec=currentChild.records[rule.id];
+  if(rec){
+    const date=(typeof rec==='string')?rec:rec.date;
+    return {type:'done',text:'Selesai',date,batch: typeof rec==='object'?rec.batch:undefined};
+  }
+  const today=todayISO();
+  const ideal=idealDateFor(rule,currentChild.dob);
+  if(today < ideal) return {type:'hidden'};
+  if(rule.ideal?.hours){
+    const max=addDays(currentChild.dob,(rule.notAfterDays??7));
+    if(today>max) return {type:'late',text:'Terlambat'};
+    return {type:'due',text:'Jatuh Tempo'};
+  }
+  const lateThreshold=addDays(ideal,29);
+  if(today>lateThreshold) return {type:'late',text:'Terlambat'};
+  return {type:'due',text:'Jatuh Tempo'};
+}
+
+function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Terlambat</span>`; if(st.type==='due') return `<span class="badge b-amber">Jatuh Tempo</span>`; return '' }
+
+function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.batches[vaxId]||[]; const now=todayISO(); arr.forEach(b=>{ const disabled=!b.active || b.dosesRemaining<=0 || b.exp<now; const opt=document.createElement('option'); opt.value=b.code; opt.textContent=`${b.code} · exp ${fmtID(b.exp)}` + (!b.active?' · non-aktif':'') + (b.exp<now?' · expired':''); opt.disabled=disabled; selectEl.appendChild(opt); }); if(selectEl.options.length===0){ const o=document.createElement('option'); o.textContent='Tidak ada batch tersedia'; selectEl.appendChild(o); } }
+
+// ====== COMPLETENESS CHIPS (dummy evaluasi cepat) ======
+function renderProgramChips(){
+  // Sederhana: jika sebagian besar paket bayi ada, tandai b-green, dll. (placeholder)
+  const has = id => Boolean(currentChild.records[id]);
+  const idlOk = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'].every(has);
+  const iblOk = idlOk && ['pentabio4','mr2'].every(has);
+  const biasOk = ['mr_school','dt_school','td_school_2','td_school_5'].every(has);
+  const ageMonths = diffYMD(currentChild.dob,todayISO()).years*12 + diffYMD(currentChild.dob,todayISO()).months;
+
+  const irlOk = (ageMonths<12? idlOk : ageMonths<24? iblOk : (iblOk && biasOk));
+
+  const setChip=(id,ok)=>{ const el=byId(id); el.textContent = ok?'Lengkap':'Belum Lengkap'; el.className = `badge ${ok?'b-green':'b-amber'}`; };
+  setChip('chip-idl', idlOk);
+  setChip('chip-ibl', iblOk);
+  setChip('chip-bias', biasOk);
+  setChip('chip-irl', irlOk);
+}
+
+// ====== LIST VAKSIN ======
+function renderVaxList(){
+  const list=byId('vax-list'); list.innerHTML=''; let done=0,due=0,late=0;
+
+  RULES.forEach(rule=>{
+    const st=statusFor(rule);
+    if(st.type==='hidden') return;
+    if(st.type==='done') done++; if(st.type==='due') due++; if(st.type==='late') late++;
+
+    const hasRecord = Boolean(st.date);
+    const ideal = idealDateFor(rule,currentChild.dob);
+    const formId=`form-${rule.id}`;
+
+    const row=document.createElement('div');
+    row.className='px-5 py-4';
+
+    row.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h3 class="font-medium text-slate-800">${rule.label}</h3>
+            ${badge(st)}
+          </div>
+          <p class="text-sm text-slate-500">Jadwal ideal: ${fmtID(ideal)}</p>
+          ${hasRecord ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : ''}
+        </div>
+        ${hasRecord ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
+      </div>
+
+      ${!hasRecord ? `
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>
+        <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
+      </div>` : ''}
+
+      <div id="${formId}" class="row-form mt-3">
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <label class="block text-sm text-slate-600">Tanggal Penyuntikan</label>
+            <input type="date" class="w-full px-4 py-3 rounded-xl border border-slate-200" />
+            <p class="mt-1 text-xs text-rose-600 hidden" data-error aria-live="polite"></p>
+          </div>
+
+          <!-- Toggle batch (muncul saat Edit) -->
+          <div class="batch-toggle hidden">
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" data-cbat class="rounded"> Catat batch (opsional)
+            </label>
+          </div>
+
+          <div class="batch-wrap hidden">
+            <label class="block text-sm text-slate-600">Batch</label>
+            <select class="w-full px-4 py-3 rounded-xl border border-slate-200"></select>
+          </div>
+
+          <div class="flex gap-2">
+            <button class="btn btn-primary flex-1" data-save>Simpan</button>
+            <button class="btn btn-ghost" data-cancel>Batal</button>
+          </div>
+          <p class="text-xs text-slate-500">* Terlambat dihitung jika lewat <b>jadwal + 29 hari</b>.</p>
+        </div>
+      </div>
+    `;
+
+    list.appendChild(row);
+
+    // --- Wiring ---
+    const form=row.querySelector(`#${formId}`);
+    const dateInput=form.querySelector('input[type="date"]');
+    const batchWrap=form.querySelector('.batch-wrap');
+    const batchSelect=batchWrap.querySelector('select');
+    const errEl=form.querySelector('[data-error]');
+    const toggleWrap=form.querySelector('.batch-toggle');
+    const cbAt=form.querySelector('[data-cbat]');
+
+    const clearErr=()=>{ errEl.textContent=''; errEl.classList.add('hidden'); };
+
+    // Default date = jadwal ideal (feedback)
+    dateInput.value = ideal;
+    // Clamp ke minimal tanggal yang diizinkan
+    const min = earliestAllowedDate(rule);
+    dateInput.min = min;
+    if(dateInput.value < min) dateInput.value = min;
+
+    // NEW: Edit mode
+    if(hasRecord){
+      toggleWrap.classList.remove('hidden');
+      // Prefill dari record
+      const rec = currentChild.records[rule.id];
+      const rDate = (typeof rec==='string') ? rec : rec.date;
+      const rBatch = (typeof rec==='object') ? rec.batch : null;
+
+      dateInput.value = rDate;
+      if(rBatch){
+        cbAt.checked = true;
+        batchWrap.classList.remove('hidden');
+        fillBatchOptions(batchSelect, rule.id);
+        batchSelect.value = rBatch;
+      }
+      cbAt.addEventListener('change', ()=>{
+        if(cbAt.checked){
+          batchWrap.classList.remove('hidden');
+          fillBatchOptions(batchSelect, rule.id);
+        }else{
+          batchWrap.classList.add('hidden');
+        }
+      });
+
+      row.querySelector('[data-edit]').onclick = ()=>{ form.classList.add('show'); clearErr(); };
+    } else {
+      // Mode baru: dua tombol
+      const btnTanggal=row.querySelector('[data-action="tanggal"]');
+      const btnLengkap=row.querySelector('[data-action="lengkap"]');
+      btnTanggal.onclick=()=>{ clearErr(); form.classList.add('show'); batchWrap.classList.add('hidden'); toggleWrap.classList.add('hidden'); };
+      btnLengkap.onclick=()=>{ clearErr(); form.classList.add('show'); toggleWrap.classList.add('hidden'); batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); };
+    }
+
+    form.querySelector('[data-cancel]').onclick=()=>{ form.classList.remove('show'); };
+
+    form.querySelector('[data-save]').onclick=()=>{
+      const d=dateInput.value;
+      if(!d){ errEl.textContent='Isi tanggal terlebih dahulu.'; errEl.classList.remove('hidden'); return; }
+
+      const w = validateDateWindow(rule.id, d);
+      if(!w.ok){ errEl.textContent=w.msg; errEl.classList.remove('hidden'); return; }
+
+      const v = validateInterval(rule.id, d);
+      if(!v.ok){ errEl.textContent=v.msg; errEl.classList.remove('hidden'); return; }
+
+      // Tentukan payload—tanggal saja atau dengan batch (edit/new)
+      let payload = d;
+      const useBatch = !toggleWrap.classList.contains('hidden') ? cbAt.checked : !batchWrap.classList.contains('hidden');
+      if(useBatch){
+        const code=batchSelect.value; const arr=DB.batches[rule.id]||[]; const picked=arr.find(x=>x.code===code);
+        if(picked){ if(!picked.active || picked.exp<todayISO() || picked.dosesRemaining<=0){ alert('Batch tidak valid.'); return; } if(!hasRecord) picked.dosesRemaining--; }
+        payload = {date:d, batch: code||null};
+      }
+
+      currentChild.records[rule.id]=payload;
+      renderProgramChips();
+      renderVaxList();
+    };
+
+  });
+
+  byId('s-done').textContent=done; byId('s-due').textContent=due; byId('s-late').textContent=late;
+}
+
+// ====== PENIMBANGAN ======
+function renderMeasureList(){
+  const wrap=byId('measure-list');
+  const hasBirth=(currentChild.measures||[]).some(m=>m.type==='birth');
+  const data=(currentChild.measures||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  let html='';
+  if(!hasBirth){
+    html += `<div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800 text-sm flex items-start justify-between">
+      <div><b>Belum ada penimbangan saat lahir.</b><br/><span class="text-amber-700">Tambahkan untuk baseline pertumbuhan.</span></div>
+      <button id="btnBirth" class="btn btn-primary ml-3">+ Input Lahir</button>
+    </div>`;
+  }
+  if(!data.length){
+    html += '<p class="text-slate-500 text-sm">Belum ada riwayat penimbangan</p>';
+    wrap.innerHTML=html; if(!hasBirth){ byId('btnBirth').onclick=()=>openWeigh('birth'); } return;
+  }
+  wrap.innerHTML=html;
+  if(!hasBirth){ byId('btnBirth').onclick=()=>openWeigh('birth'); }
+  data.forEach(m=>{
+    const bmi=(m.height>0)?(m.weight/Math.pow(m.height/100,2)):null;
+    const info=calcZAll(currentChild,m);
+    const row=document.createElement('div');
+    row.className='py-3 border-b last:border-0 border-slate-100';
+    row.innerHTML=`<div class="flex items-start justify-between">
+      <div>
+        <div class="font-medium text-slate-800">${fmtID(m.date)} ${m.type==='birth'?'<span class=\'ml-2 badge b-amber\'>Lahir</span>':''}</div>
+        <div class="text-sm text-slate-600">BB: <b>${m.weight}</b> kg · TB: <b>${m.height}</b> cm · IMT: <b>${bmi?bmi.toFixed(2):'-'}</b></div>
+        <div class="text-xs text-slate-500">Usia: ${ageLabel(currentChild.dob,m.date)}</div>
+      </div>
+      <div class="text-right text-xs text-slate-600">
+        <div>BB/U z: <b>${fmtZ(info.wfa)}</b></div>
+        <div>TB/U z: <b>${fmtZ(info.lhfa)}</b></div>
+        <div>IMT/U z: <b>${fmtZ(info.bfa)}</b></div>
+      </div>
+    </div>`;
+    wrap.appendChild(row);
+  });
+}
+
+let WEIGH_MODE='visit';
+function openWeigh(mode='visit'){
+  WEIGH_MODE=mode;
+  nav('weigh');
+  byId('w-child').textContent=`${currentChild.name} · NIK ${currentChild.nik}`;
+  const isBirth=(mode==='birth');
+  const d=isBirth?currentChild.dob:todayISO();
+  const dateEl=byId('w-date');
+  dateEl.value=d;
+  dateEl.disabled=isBirth;
+  byId('w-sex').value=currentChild.sex||'M';
+  updateWeighPreview();
+  byId('w-date').oninput=updateWeighPreview;
+  byId('w-weight').oninput=updateWeighPreview;
+  byId('w-height').oninput=updateWeighPreview;
+  byId('w-sex').oninput=(e)=>{ currentChild.sex=e.target.value; updateWeighPreview(); };
+  byId('w-save').onclick=()=>{
+    const isBirthSave=(WEIGH_MODE==='birth');
+    const date=isBirthSave?currentChild.dob:byId('w-date').value;
+    const weight=parseFloat(byId('w-weight').value); const height=parseFloat(byId('w-height').value);
+    if(!date || isNaN(weight) || isNaN(height)){ alert('Lengkapi tanggal, berat, dan tinggi.'); return; }
+    currentChild.measures=currentChild.measures||[];
+    if(isBirthSave){
+      const idx=(currentChild.measures||[]).findIndex(m=>m.type==='birth');
+      const entry={type:'birth',date,weight,height,sex:currentChild.sex};
+      if(idx>=0) currentChild.measures[idx]=entry; else currentChild.measures.push(entry);
+    } else {
+      currentChild.measures.push({type:'visit',date,weight,height});
+    }
+    byId('w-weight').value=''; byId('w-height').value=''; byId('w-date').disabled=false;
+    nav('child'); renderMeasureList();
+  };
+}
+function updateWeighPreview(){
+  const isBirth=(WEIGH_MODE==='birth');
+  const date=isBirth?currentChild.dob:(byId('w-date').value||todayISO());
+  const w=parseFloat(byId('w-weight').value); const h=parseFloat(byId('w-height').value);
+  byId('w-age').textContent=ageLabel(currentChild.dob,date);
+  const bmi=(!isNaN(w)&&!isNaN(h)&&h>0)?(w/Math.pow(h/100,2)):NaN; byId('w-bmi').textContent=isNaN(bmi)?'-':bmi.toFixed(2);
+  const info=(!isNaN(w)&&!isNaN(h))?calcZAll(currentChild,{date,weight:w,height:h}):{wfa:null,lhfa:null,bfa:null};
+  byId('w-z').textContent=`${fmtZ(info.wfa)} / ${fmtZ(info.lhfa)} / ${fmtZ(info.bfa)}`;
+}
+
+// ====== WHO LMS (placeholder minimal) ======
+const WHO_LMS = {
+  M:{
+    wfa:{0:{L:0.3487,M:3.3,S:0.14602},12:{L:-0.3521,M:9.6,S:0.12385},24:{L:-0.2061,M:12.2,S:0.1278},36:{L:-0.1257,M:14.3,S:0.1304},48:{L:-0.082,M:16.3,S:0.1333},60:{L:-0.04,M:18.3,S:0.1355}},
+    lhfa:{0:{L:1,M:49.9,S:0.03795},12:{L:1,M:75.7,S:0.0349},24:{L:1,M:87.8,S:0.0364},36:{L:1,M:96.1,S:0.039},48:{L:1,M:103.3,S:0.042},60:{L:1,M:110,S:0.045}},
+    bfa:{0:{L:-0.3053,M:13.4,S:0.0956},12:{L:-0.3521,M:16.3,S:0.0806},24:{L:-0.3833,M:16.0,S:0.0807},36:{L:-0.3521,M:15.7,S:0.081},48:{L:-0.3521,M:15.6,S:0.082},60:{L:-0.3521,M:15.5,S:0.083}}
+  },
+  F:{
+    wfa:{0:{L:0.3809,M:3.2,S:0.14171},12:{L:-0.3833,M:8.9,S:0.1278},24:{L:-0.2061,M:11.5,S:0.1311},36:{L:-0.1257,M:13.9,S:0.1343},48:{L:-0.082,M:16,S:0.137},60:{L:-0.04,M:18.2,S:0.14}},
+    lhfa:{0:{L:1,M:49.1,S:0.0379},12:{L:1,M:74.0,S:0.0356},24:{L:1,M:86.4,S:0.0374},36:{L:1,M:95.1,S:0.0401},48:{L:1,M:102.7,S:0.0432},60:{L:1,M:109.4,S:0.046}},
+    bfa:{0:{L:-0.3833,M:13.3,S:0.0946},12:{L:-0.3833,M:16.1,S:0.0811},24:{L:-0.3833,M:16.0,S:0.082},36:{L:-0.3833,M:15.6,S:0.083},48:{L:-0.3833,M:15.5,S:0.084},60:{L:-0.3833,M:15.4,S:0.085}}
+  }
+};
+function monthAge(dob,ref){ const d=diffYMD(dob,ref); return d.years*12 + d.months + d.days/30.4375; }
+function lmsZ(x,{L,M,S}){ if(!isFinite(x)||!isFinite(L)||!isFinite(M)||!isFinite(S)||M<=0||S<=0) return null; if(Math.abs(L) < 1e-8) return Math.log(x/M)/S; return (Math.pow(x/M,L)-1)/(L*S); }
+function interpLMS(sex,metric,months){ const tbl=WHO_LMS[sex]?.[metric]; if(!tbl) return null; const keys=Object.keys(tbl).map(k=>+k).sort((a,b)=>a-b); if(!keys.length) return null; if(months<=keys[0]) return tbl[keys[0]]; if(months>=keys[keys.length-1]) return tbl[keys[keys.length-1]]; for(let i=0;i<keys.length-1;i++){ const a=keys[i], b=keys[i+1]; if(months>=a && months<=b){ const t=(months-a)/(b-a); const A=tbl[a], B=tbl[b]; return {L:A.L+(B.L-A.L)*t, M:A.M+(B.M-A.M)*t, S:A.S+(B.S-A.S)*t}; } } return null; }
+function calcZAll(child,measure){ const sex=child.sex||'M'; const m=monthAge(child.dob,measure.date); const w=measure.weight; const h=measure.height; const bmi=(h>0)?(w/Math.pow(h/100,2)):NaN; const W=interpLMS(sex,'wfa',m); const H=interpLMS(sex,'lhfa',m); const B=interpLMS(sex,'bfa',m); return { wfa: W?lmsZ(w,W):null, lhfa: H?lmsZ(h,H):null, bfa: B?lmsZ(bmi,B):null } }
+function fmtZ(z){ if(z==null||!isFinite(z)) return '—'; return z>0?`+${z.toFixed(2)}`:z.toFixed(2); }
+
+// ====== Lightweight DEV tests (console) ======
+(function runTests(){
+  try{
+    const assert=(c,m)=>{ if(!c) throw new Error(m); };
+    const saved=currentChild;
+
+    let dob='2024-01-31', ref='2024-03-01';
+    let lbl=ageLabel(dob,ref); assert(/0 tahun 1 bulan 1 hari/.test(lbl),'ageLabel leap-year end-of-month');
+
+    dob='2023-01-31'; ref='2023-03-01';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 1 bulan 1 hari/.test(lbl),'ageLabel non-leap end-of-month');
+
+    assert(parseDOBFromNIK('0000003101240001')==='2024-01-31','parse NIK male');
+    assert(sexFromNIK('0000007101240001')==='F','sex female +40');
+
+    currentChild={dob:'2025-01-01', measures:[] , records:{}};
+    const before=currentChild.measures.length; currentChild.measures.push({date:'2025-02-01',weight:5.1,height:58});
+    assert(currentChild.measures.length===before+1,'measure push works');
+
+    const today=todayISO(); currentChild.dob=addMonths(today,-1);
+    const st=statusFor({ideal:{months:1}}); assert(st.type==='due','should be jatuh tempo');
+
+    dob='2025-01-31'; ref='2025-02-28';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 28 hari/.test(lbl),'jan31 → feb28 non-leap');
+
+    dob='2024-01-31'; ref='2024-02-29';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 29 hari/.test(lbl),'jan31 → feb29 leap');
+
+    dob='2024-02-29'; ref='2024-03-01';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 1 hari/.test(lbl),'feb29 → mar1');
+
+    dob='2024-02-28'; ref='2024-03-01';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 2 hari/.test(lbl),'feb28 → mar1');
+
+    dob='2024-08-31'; ref='2024-09-30';
+    lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 30 hari/.test(lbl),'aug31 → sep30');
+
+    currentChild={dob:'2025-01-01', records:{ opv1:'2025-02-01' }};
+    let v = validateInterval('opv2','2025-02-20');
+    assert(v.ok===false,'interval <28 days should block');
+    v = validateInterval('opv2','2025-03-05');
+    assert(v.ok===true,'interval >=28 days should pass');
+    currentChild={dob:'2025-01-01', records:{}};
+    v = validateInterval('opv2','2025-03-05');
+    assert(v.ok===false,'missing previous dose should block');
+
+    currentChild={dob:'2025-01-01', records:{ pcv1:'2025-02-01' }};
+    v = validateInterval('pcv2','2025-02-20');
+    assert(v.ok===false,'pcv gap <28 should block');
+    v = validateInterval('pcv2','2025-03-01');
+    assert(v.ok===true,'pcv gap >=28 should pass');
+
+    currentChild={dob:'2025-01-10', records:{}};
+    let w = validateDateWindow('bcg1','2025-01-01');
+    assert(w.ok===false && /sebelum tanggal lahir/i.test(w.msg),'date before DOB should block');
+    w = validateDateWindow('bcg1','2025-01-15');
+    assert(w.ok===false && /sebelum jadwal ideal/i.test(w.msg),'date before ideal should block');
+
+    currentChild=saved; console.log('%cDEV tests passed','color:green');
+  }catch(e){ console.error('DEV test failed:', e.message); }
+})();
+
+// Boot example
+// openChild('3574015706250002');
+</script>
+</body>
+</html>
