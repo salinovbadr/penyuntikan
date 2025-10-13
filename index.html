@@ -126,7 +126,7 @@
   <main class="max-w-xl mx-auto px-5 -mt-6">
     <div class="grid grid-cols-3 gap-3">
       <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-green-100 text-green-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div id="s-done" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Selesai</div></div>
-      <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-amber-100 text-amber-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div id="s-due" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Jatuh Tempo</div></div>
+      <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-amber-100 text-amber-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div id="s-due" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Sesuai Jadwal</div></div>
       <div class="card p-5 text-center"><div class="mx-auto mb-1 h-5 w-5 rounded-full grid place-items-center bg-rose-100 text-rose-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6m0-6l6 6"/></svg></div><div id="s-late" class="text-3xl font-bold">0</div><div class="text-sm text-slate-600">Terlambat</div></div>
     </div>
 
@@ -462,14 +462,14 @@ function statusFor(rule){
   if(rule.ideal?.hours){
     const max=addDays(currentChild.dob,(rule.notAfterDays??7));
     if(today>max) return {type:'late',text:'Terlambat'};
-    return {type:'due',text:'Jatuh Tempo'};
+    return {type:'due',text:'Sesuai Jadwal'};
   }
   const lateThreshold=addDays(ideal,29);
   if(today>lateThreshold) return {type:'late',text:'Terlambat'};
-  return {type:'due',text:'Jatuh Tempo'};
+  return {type:'due',text:'Sesuai Jadwal'};
 }
 
-function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Terlambat</span>`; if(st.type==='due') return `<span class="badge b-amber">Jatuh Tempo</span>`; return '' }
+function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Terlambat</span>`; if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`; return '' }
 
 function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.batches[vaxId]||[]; const now=todayISO(); arr.forEach(b=>{ const disabled=!b.active || b.dosesRemaining<=0 || b.exp<now; const opt=document.createElement('option'); opt.value=b.code; opt.textContent=`${b.code} · exp ${fmtID(b.exp)}` + (!b.active?' · non-aktif':'') + (b.exp<now?' · expired':''); opt.disabled=disabled; selectEl.appendChild(opt); }); if(selectEl.options.length===0){ const o=document.createElement('option'); o.textContent='Tidak ada batch tersedia'; selectEl.appendChild(o); } }
 
@@ -760,7 +760,7 @@ function fmtZ(z){ if(z==null||!isFinite(z)) return '—'; return z>0?`+${z.toFix
     assert(currentChild.measures.length===before+1,'measure push works');
 
     const today=todayISO(); currentChild.dob=addMonths(today,-1);
-    const st=statusFor({ideal:{months:1}}); assert(st.type==='due','should be jatuh tempo');
+    const st=statusFor({ideal:{months:1}}); assert(st.type==='due','should be sesuai jadwal');
 
     dob='2025-01-31'; ref='2025-02-28';
     lbl=ageLabel(dob,ref); assert(/0 tahun 0 bulan 28 hari/.test(lbl),'jan31 → feb28 non-leap');
