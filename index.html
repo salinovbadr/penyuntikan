@@ -325,6 +325,7 @@ const SERIES = {
   pentabio: ['pentabio1','pentabio2','pentabio3','pentabio4'],
   pcv:      ['pcv1','pcv2','pcv3'],
   rota:     ['rota1','rota2','rota3'],
+  mr:       ['mr1','mr2'],
   ipv:      ['ipv1','ipv2']
 };
 
@@ -365,6 +366,43 @@ function validateInterval(ruleId, dateISO){
   }
   if(gap < 28){
     return {ok:false, msg:`Interval antar dosis ${label} minimal 4 minggu (28 hari).\nJarak dari dosis sebelumnya: ${gap} hari.\nDosis sebelumnya: ${fmtID(prevDate)} · Tanggal input: ${fmtID(dateISO)}`};
+  }
+  
+  // Additional age-dependent rules for Pentabio (DPT-HB-Hib)
+  if(info.key === 'pentabio'){
+    // compute child's age in months at the date of the new dose
+    const age = diffYMD(currentChild.dob, dateISO);
+    const ageMonths = age.years*12 + age.months;
+    if(ageMonths >= 12 && ageMonths <= 59){
+      // Instead of day-count heuristics, derive calendar-based minimal allowed date
+      // Find the previous dose index and its date (prevDate already set)
+      let minAllowed = null;
+      if(info.idx === 1){ // dose 2: min 1 month after prevDate
+        minAllowed = addUTC(prevDate, {months:1});
+      }
+      if(info.idx === 2){ // dose 3: min 6 months after prevDate
+        minAllowed = addUTC(prevDate, {months:6});
+      }
+      if(info.idx === 3){ // dose 4: min 12 months after prevDate
+        minAllowed = addUTC(prevDate, {months:12});
+      }
+      if(minAllowed && dateISO < minAllowed){
+        return {ok:false, msg:`Untuk usia 12-59 bulan, tanggal minimal untuk dosis ini adalah ${fmtID(minAllowed)} (aturan: lihat catatan program).`};
+      }
+    }
+  }
+  // PCV rules: if child age 12-24 months and saving dose 2, require >=8 weeks (56 days) from dose1
+  if(info.key === 'pcv'){
+    const age = diffYMD(currentChild.dob, dateISO);
+    const ageMonths = age.years*12 + age.months;
+    if(ageMonths >= 12 && ageMonths < 24 && info.idx === 1){
+      const minDate = addUTC(prevDate, {days:56});
+      if(dateISO < minDate) return {ok:false, msg:`Untuk usia 12-24 bulan, PCV dosis 2 minimal 8 minggu setelah dosis 1 (minimal tanggal ${fmtID(minDate)}).`};
+    }
+  }
+  // MR rules: second MR dose (idx 1) must be at least 6 months after first
+  if(info.key === 'mr'){
+    if(info.idx === 1){ const minDate = addUTC(prevDate, {months:6}); if(dateISO < minDate) return {ok:false, msg:`MR dosis 2 harus minimal 6 bulan setelah MR dosis 1 (minimal tanggal ${fmtID(minDate)}).`}; }
   }
   return {ok:true};
 }
@@ -617,9 +655,17 @@ function renderVaxList(){
             ${badge(st)}
           </div>
           <p class="text-sm text-slate-500">Jadwal ideal: ${fmtID(ideal)}</p>
+          ${(()=>{
+            // small rule hint: kejar end and interval summary
+            let hints = [];
+            if(rule.catchupUntilMonths){ const kejarEnd = addUTC(currentChild.dob,{months:rule.catchupUntilMonths,days:29}); hints.push(`Kejar sampai: ${fmtID(kejarEnd)}`); }
+            if(rule.notAfterMonths){ const na = addUTC(currentChild.dob,{months:rule.notAfterMonths}); hints.push(`Tidak boleh setelah: ${fmtID(na)}`); }
+            if(rule.notAfterYears){ const nay = addUTC(currentChild.dob,{years:rule.notAfterYears}); hints.push(`Tidak boleh setelah: ${fmtID(nay)}`); }
+            if(hints.length){ const t = hints.join(' · '); return `<div class=\"text-xs text-slate-400 mt-1\"><span title=\"${t}\">${hints.join(' · ')}</span></div>`; } return '';
+          })()}
           ${hasDate ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : ''}
           </div>
-          ${(st.type==='done' || st.type==='not_given') ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
+        ${(st.type==='done' || st.type==='not_given' || st.type==='kejar') ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
       </div>
       <!-- Input actions: tanggal / lengkap / tidak diberikan (only when not completed) -->
       ${(st.type==='done' || st.type==='not_given') ? '' : `
