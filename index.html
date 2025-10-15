@@ -758,8 +758,40 @@ function renderVaxList(){
       // Mode baru: dua tombol
       const btnTanggal=row.querySelector('[data-action="tanggal"]');
       const btnLengkap=row.querySelector('[data-action="lengkap"]');
-      btnTanggal.onclick=()=>{ clearErr(); form.classList.add('show'); batchWrap.classList.add('hidden'); toggleWrap.classList.add('hidden'); };
-      btnLengkap.onclick=()=>{ clearErr(); form.classList.add('show'); toggleWrap.classList.add('hidden'); batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); };
+
+      // Helper: determine if batch is required for a given date (within 30 days before ideal)
+      const batchRequiredForDate = (dateISO)=>{
+        try{
+          const idealDate = ideal;
+          const threshold = addDaysUTC(idealDate, -30);
+          return dateISO >= threshold && dateISO <= idealDate;
+        }catch(e){ return false; }
+      };
+
+      btnTanggal.onclick=()=>{
+        clearErr();
+        // default date value is set below; ensure dateInput reflects ideal
+        dateInput.value = ideal;
+        const min = earliestAllowedDate(rule);
+        dateInput.min = min;
+        if(dateInput.value < min) dateInput.value = min;
+
+        // If batch required for this date, force batch input instead of date-only
+        if(batchRequiredForDate(dateInput.value)){
+          // show form and batch controls (mandatory)
+          toggleWrap.classList.add('hidden');
+          batchWrap.classList.remove('hidden');
+          fillBatchOptions(batchSelect, rule.id);
+          if(cbAt) { cbAt.checked = true; cbAt.disabled = true; }
+        } else {
+          toggleWrap.classList.add('hidden');
+          batchWrap.classList.add('hidden');
+          if(cbAt) { cbAt.checked = false; cbAt.disabled = false; }
+        }
+        form.classList.add('show');
+      };
+
+      btnLengkap.onclick=()=>{ clearErr(); form.classList.add('show'); toggleWrap.classList.add('hidden'); batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); if(cbAt) cbAt.disabled = false; };
     }
 
     // Ensure Edit button toggles form consistently for all statuses (done / not_given / kejar)
@@ -781,13 +813,23 @@ function renderVaxList(){
           if(cbAt && cbAt.checked){ batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); batchSelect.value = rBatch || (batchSelect.options[0] && batchSelect.options[0].value); }
           else { batchWrap.classList.add('hidden'); }
         } else {
-          // New entry / kejar case: hide batch toggle and set default date to ideal
-          toggleWrap.classList.add('hidden');
-          batchWrap.classList.add('hidden');
-          dateInput.value = ideal;
+          // New entry / kejar case: decide batch visibility based on requirement
           const min = earliestAllowedDate(rule);
           dateInput.min = min;
+          dateInput.value = ideal;
           if(dateInput.value < min) dateInput.value = min;
+          // If within 30 days before ideal, require batch
+          const threshold = addDaysUTC(ideal, -30);
+          if(dateInput.value >= threshold && dateInput.value <= ideal){
+            toggleWrap.classList.add('hidden');
+            batchWrap.classList.remove('hidden');
+            fillBatchOptions(batchSelect, rule.id);
+            if(cbAt){ cbAt.checked = true; cbAt.disabled = true; }
+          } else {
+            toggleWrap.classList.add('hidden');
+            batchWrap.classList.add('hidden');
+            if(cbAt){ cbAt.checked = false; cbAt.disabled = false; }
+          }
         }
         // attach batch checkbox listener once
         if(cbAt && !cbAt._listenerAdded){
