@@ -679,12 +679,15 @@ function renderProgramChips(){
   setChip('chip-bias', biasOk);
   setChip('chip-irl', irlOk);
 
-  // Hide the entire program-completeness card when everything is already 'Ya'
+  // Hide the entire program-completeness card when there are no recorded values
   try{
     const progWrap = byId('program-completeness');
     const card = progWrap ? progWrap.parentElement : null;
-    const allOk = idlOk && iblOk && biasOk && irlOk;
-    if(card) card.style.display = allOk ? 'none' : '';
+    // collect all IDs that belong to these program groups
+    const biasList = ['mr_school','dt_school','td_school_2','td_school_5'];
+    const allIds = idlList.concat(iblList).concat(biasList);
+    const hasAnyRecord = allIds.some(id => Boolean(currentChild.records && currentChild.records[id]));
+    if(card) card.style.display = hasAnyRecord ? '' : 'none';
   }catch(e){}
 
   // Build popover content: list reasons why packages are not complete
