@@ -482,24 +482,62 @@ function idealDateFor(rule, dob){ if(rule.ideal?.hours){ return dob; } const mon
 
 function statusFor(rule){
   const rec=currentChild.records[rule.id];
+  // If there's a recorded date, determine if it was on-time, kejar (catch-up),
+  // or beyond catch-up (still show as done but note it's late).
   if(rec){
     const date=(typeof rec==='string')?rec:rec.date;
-    return {type:'done',text:'Selesai',date,batch: typeof rec==='object'?rec.batch:undefined};
+    const batch = typeof rec==='object'?rec.batch:undefined;
+    const ideal = idealDateFor(rule,currentChild.dob);
+    // If recorded date is after ideal, check whether it's within catch-up window
+    if(date > ideal){
+      // Determine catch-up window end if available
+      let catchupEnd = null;
+      if(rule.catchupUntilMonths){ catchupEnd = addMonths(currentChild.dob, rule.catchupUntilMonths); }
+      if(rule.notAfterMonths){ catchupEnd = addMonths(currentChild.dob, rule.notAfterMonths); }
+      if(rule.notAfterYears){ catchupEnd = addMonths(currentChild.dob, rule.notAfterYears*12); }
+      if(catchupEnd){
+        if(date <= catchupEnd) return {type:'kejar', text:'Kejar', date, batch};
+        // recorded after catch-up window — still mark as done but note date
+        return {type:'done', text:'Selesai', date, batch};
+      }
+      // No explicit catch-up window defined: treat as done
+      return {type:'done', text:'Selesai', date, batch};
+    }
+    return {type:'done',text:'Selesai',date,batch};
   }
+
   const today=todayISO();
   const ideal=idealDateFor(rule,currentChild.dob);
-  if(today < ideal) return {type:'hidden'};
+
+  // Special-case short-window vaccines (e.g., HB0) where notAfterDays applies
   if(rule.ideal?.hours){
-    const max=addDays(currentChild.dob,(rule.notAfterDays??7));
-    if(today>max) return {type:'late',text:'Terlambat'};
+    const max = addDays(currentChild.dob, (rule.notAfterDays ?? 7));
+    if(today > max){
+      // beyond allowable window — vaccine cannot be given or counted
+      return {type:'not_given', text:'Tidak Diberikan'};
+    }
+    // still within HB0 window
+    if(today < ideal) return {type:'hidden'};
     return {type:'due',text:'Sesuai Jadwal'};
   }
-  const lateThreshold=addDays(ideal,29);
-  if(today>lateThreshold) return {type:'late',text:'Terlambat'};
+
+  // For other vaccines, if today is before ideal, hide; if after a late threshold
+  // we consider it late/unpursued. The late threshold can be interpreted as ideal+29d
+  const lateThreshold = addDays(ideal,29);
+  if(today > lateThreshold) return {type:'late',text:'Terlambat'};
+  if(today < ideal) return {type:'hidden'};
   return {type:'due',text:'Sesuai Jadwal'};
 }
 
-function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Belum Input</span>`; if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`; return '' }
+function badge(st){
+  if(!st) return '';
+  if(st.type==='done') return `<span class="badge b-green">Selesai</span>`;
+  if(st.type==='kejar') return `<span class="badge b-amber">Kejar</span>`;
+  if(st.type==='not_given') return `<span class="badge b-red">Tidak Diberikan</span>`;
+  if(st.type==='late') return `<span class="badge b-red">Belum Input</span>`;
+  if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`;
+  return ''
+}
 
 function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.batches[vaxId]||[]; const now=todayISO(); arr.forEach(b=>{ const disabled=!b.active || b.dosesRemaining<=0 || b.exp<now; const opt=document.createElement('option'); opt.value=b.code; opt.textContent=`${b.code} · exp ${fmtID(b.exp)}` + (!b.active?' · non-aktif':'') + (b.exp<now?' · expired':''); opt.disabled=disabled; selectEl.appendChild(opt); }); if(selectEl.options.length===0){ const o=document.createElement('option'); o.textContent='Tidak ada batch tersedia'; selectEl.appendChild(o); } }
 
@@ -554,12 +592,12 @@ function renderVaxList(){
             ${badge(st)}
           </div>
           <p class="text-sm text-slate-500">Jadwal ideal: ${fmtID(ideal)}</p>
-          ${hasRecord ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : ''}
+          ${st.type==='not_given' ? `<div class='text-sm text-rose-600 mt-1'><b>Tidak Diberikan</b> · Tidak dihitung pada kelengkapan IDL/IBL.</div>` : (hasRecord ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : '')}
         </div>
         ${hasRecord ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
       </div>
 
-      ${!hasRecord ? `
+      ${(!hasRecord && st.type!=='not_given') ? `
       <div class="mt-3 grid grid-cols-2 gap-2">
         <button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>
         <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
