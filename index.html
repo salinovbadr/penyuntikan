@@ -24,6 +24,9 @@
     .btn-ghost:hover{background:#e2e8f0}
     .btn-danger{background:#fff1f2;color:#be123c;border-color:#fecdd3;border-width:1px;padding:.5rem .85rem;border-radius:.6rem;font-weight:600}
     .btn-danger:hover{background:#ffe4e8}
+    /* small icon-only button for low-priority actions */
+    .icon-btn{width:2.4rem;height:2.4rem;padding:0;display:inline-grid;place-items:center;border-radius:.6rem}
+    .icon-btn svg{width:1rem;height:1rem}
     [data-view]{display:none}
     [data-view].active{display:block}
     .row-form{display:none}
@@ -729,8 +732,8 @@ function renderVaxList(){
   const hasDate = Boolean(st.date);
   const ideal = idealDateFor(rule,currentChild.dob);
   const today = todayISO();
-  // If today is within 30 days before ideal (inclusive), batch input is required now
-  const batchNow = (today >= addDaysUTC(ideal, -30) && today <= ideal);
+  // If today is within 30 days before OR after ideal (inclusive), batch input is required now
+  const batchNow = (today >= addDaysUTC(ideal, -30) && today <= addDaysUTC(ideal, 30));
     const formId=`form-${rule.id}`;
 
     const row=document.createElement('div');
@@ -759,9 +762,11 @@ function renderVaxList(){
       <!-- Input actions: tanggal / lengkap / tidak diberikan (only when not completed) -->
       ${(st.type==='done' || st.type==='not_given' || st.type==='kejar') ? '' : `
       <div class="mt-3 grid grid-cols-3 gap-2">
-  ${batchNow? '': '<button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>'}
-  <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
-  <button class="btn btn-danger w-full" data-action="notgiven">Tidak Diberikan</button>
+        ${batchNow? '': '<button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>'}
+        <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
+        <button class="icon-btn btn-danger" data-action="notgiven" title="Tidak Diberikan" aria-label="Tidak Diberikan">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>`}
 
       <div id="${formId}" class="row-form mt-3">
@@ -786,7 +791,7 @@ function renderVaxList(){
 
           <div class="flex gap-2">
             <button class="btn btn-primary flex-1" data-save>Simpan</button>
-            ${st.type==='due' ? '' : `<button class="btn btn-danger" data-notgiven>Tidak Diberikan</button>`}
+            ${st.type==='due' ? '' : `<button class="icon-btn btn-danger" data-notgiven title="Tidak Diberikan" aria-label="Tidak Diberikan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`}
             <button class="btn btn-ghost" data-cancel>Batal</button>
           </div>
         </div>
