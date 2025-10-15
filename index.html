@@ -762,6 +762,45 @@ function renderVaxList(){
       btnLengkap.onclick=()=>{ clearErr(); form.classList.add('show'); toggleWrap.classList.add('hidden'); batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); };
     }
 
+    // Ensure Edit button toggles form consistently for all statuses (done / not_given / kejar)
+    const editBtn = row.querySelector('[data-edit]');
+    if(editBtn){
+      editBtn.onclick = ()=>{
+        // toggle: if visible, hide; else show and prepare fields
+        if(form.classList.contains('show')){ form.classList.remove('show'); return; }
+        clearErr();
+        // If there's an existing record, show batch toggle and prefill
+        if(hasRecord){
+          toggleWrap.classList.remove('hidden');
+          const r = currentChild.records[rule.id];
+          const rDate = (typeof r==='string') ? r : (r && r.date) || ideal;
+          const rBatch = (typeof r==='object') ? r.batch : null;
+          dateInput.value = rDate || ideal;
+          // init batch checkbox state
+          if(cbAt){ cbAt.checked = !!rBatch; }
+          if(cbAt && cbAt.checked){ batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); batchSelect.value = rBatch || (batchSelect.options[0] && batchSelect.options[0].value); }
+          else { batchWrap.classList.add('hidden'); }
+        } else {
+          // New entry / kejar case: hide batch toggle and set default date to ideal
+          toggleWrap.classList.add('hidden');
+          batchWrap.classList.add('hidden');
+          dateInput.value = ideal;
+          const min = earliestAllowedDate(rule);
+          dateInput.min = min;
+          if(dateInput.value < min) dateInput.value = min;
+        }
+        // attach batch checkbox listener once
+        if(cbAt && !cbAt._listenerAdded){
+          cbAt.addEventListener('change', ()=>{
+            if(cbAt.checked){ batchWrap.classList.remove('hidden'); fillBatchOptions(batchSelect, rule.id); }
+            else { batchWrap.classList.add('hidden'); }
+          });
+          cbAt._listenerAdded = true;
+        }
+        form.classList.add('show');
+      };
+    }
+
     // External 'Tidak Diberikan' button (next to input buttons)
     const btnNotGivenExt = row.querySelector('[data-action="notgiven"]');
     if(btnNotGivenExt){
