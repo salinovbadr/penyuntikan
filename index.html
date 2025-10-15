@@ -668,7 +668,7 @@ function renderVaxList(){
         ${(st.type==='done' || st.type==='not_given' || st.type==='kejar') ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
       </div>
       <!-- Input actions: tanggal / lengkap / tidak diberikan (only when not completed) -->
-      ${(st.type==='done' || st.type==='not_given') ? '' : `
+      ${(st.type==='done' || st.type==='not_given' || st.type==='kejar') ? '' : `
       <div class="mt-3 grid grid-cols-3 gap-2">
         <button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>
         <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
