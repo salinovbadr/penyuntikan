@@ -33,6 +33,10 @@
   .btn-text:hover{background:#fff1f2}
   .btn-text:focus{outline:2px solid rgba(79,70,229,0.08);outline-offset:2px}
   .btn-text:focus-visible{box-shadow:0 0 0 3px rgba(79,70,229,0.06);border-color:rgba(79,70,229,0.06)}
+  /* anchor-styled tertiary destructive link (accessibility first) */
+  .btn-text-link{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;background:transparent;border:none;padding:.65rem .9rem;border-radius:.75rem;color:var(--danger-500);font-weight:600;cursor:pointer;text-decoration:none}
+  .btn-text-link:hover{background:#fff1f2}
+  .btn-text-link:focus{outline:2px solid rgba(79,70,229,0.08);outline-offset:2px}
   /* Dividers between action buttons: vertical on sm+, horizontal on mobile */
   .mt-3.grid.grid-cols-3.gap-2 > * { position:relative }
   @media (min-width:640px){
@@ -755,7 +759,7 @@ function renderVaxList(){
   <div class="mt-3 grid grid-cols-3 gap-2">
     ${batchNow? '': '<button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>'}
     <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
-  <button class="btn-text w-full" data-action="notgiven" title="Tidak Diberikan">Tidak Diberikan</button>
+  <a href="#" class="btn-text-link w-full" data-action="notgiven" title="Tidak Diberikan">Tidak Diberikan</a>
   </div>`}
 
       <div id="${formId}" class="row-form mt-3">
@@ -780,7 +784,7 @@ function renderVaxList(){
 
           <div class="flex flex-col sm:flex-row gap-2">
             <button class="btn btn-primary flex-1" data-save>Simpan</button>
-            ${st.type==='due' ? '' : `<button class="btn-text w-full sm:w-auto" data-notgiven title="Tidak Diberikan">Tidak Diberikan</button>`}
+            ${st.type==='due' ? '' : `<a href="#" class="btn-text-link w-full sm:w-auto" data-notgiven title="Tidak Diberikan">Tidak Diberikan</a>`}
             <button class="btn btn-ghost" data-cancel>Batal</button>
           </div>
         </div>
@@ -913,11 +917,7 @@ function renderVaxList(){
     // External 'Tidak Diberikan' button (next to input buttons)
     const btnNotGivenExt = row.querySelector('[data-action="notgiven"]');
     if(btnNotGivenExt){
-      btnNotGivenExt.onclick = ()=>{
-        if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return;
-        currentChild.records[rule.id] = { notGiven: true };
-        renderProgramChips(); renderVaxList();
-      };
+      btnNotGivenExt.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; renderProgramChips(); renderVaxList(); });
     }
 
     form.querySelector('[data-cancel]').onclick=()=>{ form.classList.remove('show'); };
@@ -925,11 +925,7 @@ function renderVaxList(){
     // Handle 'Tidak Diberikan' explicit action
     const btnNotGiven = form.querySelector('[data-notgiven]');
     if(btnNotGiven){
-      btnNotGiven.onclick = ()=>{
-        if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return;
-        currentChild.records[rule.id] = { notGiven: true };
-        renderProgramChips(); renderVaxList();
-      };
+      btnNotGiven.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; renderProgramChips(); renderVaxList(); });
     }
 
     form.querySelector('[data-save]').onclick=()=>{
