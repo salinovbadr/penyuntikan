@@ -482,6 +482,10 @@ function idealDateFor(rule, dob){ if(rule.ideal?.hours){ return dob; } const mon
 
 function statusFor(rule){
   const rec=currentChild.records[rule.id];
+  // If previously recorded as explicitly 'not given', reflect that
+  if(rec && typeof rec==='object' && rec.notGiven){
+    return {type:'not_given', text:'Tidak Diberikan'};
+  }
   // If there's a recorded date, determine if it was on-time, kejar (catch-up),
   // or beyond catch-up (still show as done but note it's late).
   if(rec){
@@ -544,7 +548,12 @@ function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.
 // ====== COMPLETENESS CHIPS (dummy evaluasi cepat) ======
 function renderProgramChips(){
   // Sederhana: jika sebagian besar paket bayi ada, tandai b-green, dll. (placeholder)
-  const has = id => Boolean(currentChild.records[id]);
+  const has = id => {
+    const r = currentChild.records[id];
+    if(!r) return false;
+    if(typeof r==='object' && r.notGiven) return false;
+    return true;
+  };
   const idlOk = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'].every(has);
   const iblOk = idlOk && ['pentabio4','mr2'].every(has);
   const biasOk = ['mr_school','dt_school','td_school_2','td_school_5'].every(has);
@@ -575,6 +584,7 @@ function renderVaxList(){
   RULES.forEach(rule=>{
     const st=statusFor(rule);
     if(st.type==='hidden') return;
+    // Do not count 'not_given' in completeness counters
     if(st.type==='done') done++; if(st.type==='due') due++; if(st.type==='late') late++;
 
     const hasRecord = Boolean(st.date);
@@ -592,16 +602,16 @@ function renderVaxList(){
             ${badge(st)}
           </div>
           <p class="text-sm text-slate-500">Jadwal ideal: ${fmtID(ideal)}</p>
-          ${st.type==='not_given' ? `<div class='text-sm text-rose-600 mt-1'><b>Tidak Diberikan</b> · Tidak dihitung pada kelengkapan IDL/IBL.</div>` : (hasRecord ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : '')}
-        </div>
-        ${hasRecord ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
+        ${st.type==='not_given' ? `<div class='text-sm text-rose-600 mt-1'><b>Tidak Diberikan</b> · Tidak dihitung pada kelengkapan IDL/IBL.</div>` : (hasRecord ? `<div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: <b>${st.batch}</b>`:''}</div>` : '')}
+          </div>
+          ${hasRecord ? `<button class="btn btn-ghost text-sm" data-edit>Edit</button>` : ''}
       </div>
 
-      ${(!hasRecord && st.type!=='not_given') ? `
+      <!-- Always allow input (tanggal or dengan batch) even when previously marked not_given -->
       <div class="mt-3 grid grid-cols-2 gap-2">
         <button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>
         <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
-      </div>` : ''}
+      </div>
 
       <div id="${formId}" class="row-form mt-3">
         <div class="grid grid-cols-1 gap-3">
@@ -625,6 +635,7 @@ function renderVaxList(){
 
           <div class="flex gap-2">
             <button class="btn btn-primary flex-1" data-save>Simpan</button>
+            <button class="btn btn-ghost" data-notgiven>Tidak Diberikan</button>
             <button class="btn btn-ghost" data-cancel>Batal</button>
           </div>
         </div>
@@ -686,6 +697,14 @@ function renderVaxList(){
 
     form.querySelector('[data-cancel]').onclick=()=>{ form.classList.remove('show'); };
 
+    // Handle 'Tidak Diberikan' explicit action
+    const btnNotGiven = form.querySelector('[data-notgiven]');
+    btnNotGiven.onclick = ()=>{
+      if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return;
+      currentChild.records[rule.id] = { notGiven: true };
+      renderProgramChips(); renderVaxList();
+    };
+
     form.querySelector('[data-save]').onclick=()=>{
       const d=dateInput.value;
       if(!d){ errEl.textContent='Isi tanggal terlebih dahulu.'; errEl.classList.remove('hidden'); return; }
@@ -704,7 +723,7 @@ function renderVaxList(){
         if(picked){ if(!picked.active || picked.exp<todayISO() || picked.dosesRemaining<=0){ alert('Batch tidak valid.'); return; } if(!hasRecord) picked.dosesRemaining--; }
         payload = {date:d, batch: code||null};
       }
-
+      // If previously marked notGiven, overwrite with actual date record
       currentChild.records[rule.id]=payload;
       renderProgramChips();
       renderVaxList();
