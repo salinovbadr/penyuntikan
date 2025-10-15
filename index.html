@@ -679,6 +679,14 @@ function renderProgramChips(){
   setChip('chip-bias', biasOk);
   setChip('chip-irl', irlOk);
 
+  // Hide the entire program-completeness card when everything is already 'Ya'
+  try{
+    const progWrap = byId('program-completeness');
+    const card = progWrap ? progWrap.parentElement : null;
+    const allOk = idlOk && iblOk && biasOk && irlOk;
+    if(card) card.style.display = allOk ? 'none' : '';
+  }catch(e){}
+
   // Build popover content: list reasons why packages are not complete
   const issues = [];
   const addIssue = (name, reason)=> issues.push(`<div><b>${name}:</b> ${reason}</div>`);
