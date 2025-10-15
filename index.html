@@ -155,7 +155,15 @@
       <div class="card p-4 bg-indigo-50 border border-indigo-100">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-slate-800 font-semibold">Kelengkapan Program</h3>
-          <div class="text-sm text-slate-500">Status keseluruhan</div>
+          <div class="flex items-center gap-3">
+            <div class="text-sm text-slate-500">Status keseluruhan</div>
+            <button id="prog-info" class="p-1 rounded-full hover:bg-slate-100" title="Info kelengkapan program">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="prog-popover" class="card p-3 mt-2" style="display:none; position:relative; z-index:20;">
+          <div id="prog-popover-content" class="text-sm text-slate-600">Ringkasan kelengkapan akan muncul di sini.</div>
         </div>
         <div id="program-completeness" class="pt-1">
           <div class="space-y-2 text-sm">
@@ -656,6 +664,51 @@ function renderProgramChips(){
   setChip('chip-ibl', iblOk);
   setChip('chip-bias', biasOk);
   setChip('chip-irl', irlOk);
+
+  // Build popover content: list reasons why packages are not complete
+  const issues = [];
+  const addIssue = (name, reason)=> issues.push(`<div><b>${name}:</b> ${reason}</div>`);
+
+  // Check IDL items
+  if(!idlOk){
+    idlList.forEach(id=>{
+      const r = currentChild.records[id];
+      if(!r) addIssue(id, 'Belum ada tanggal tercatat');
+      else if(typeof r==='object' && r.notGiven) addIssue(id, 'Ditandai Tidak Diberikan');
+      else {
+        const d = (typeof r === 'string') ? r : r.date;
+        if(!isInWindow(d,11)) addIssue(id, `Tanggal ${fmtID(d)} di luar jangka IDL`);
+      }
+    });
+  }
+  // Check IBL items
+  if(!iblOk){
+    iblList.forEach(id=>{
+      const r = currentChild.records[id];
+      if(!r) addIssue(id, 'Belum ada tanggal tercatat');
+      else if(typeof r==='object' && r.notGiven) addIssue(id, 'Ditandai Tidak Diberikan');
+      else {
+        const d = (typeof r === 'string') ? r : r.date;
+        if(!(isInWindow(d,23) && (diffYMD(currentChild.dob, d).years*12 + diffYMD(currentChild.dob, d).months >= 12))) addIssue(id, `Tanggal ${fmtID(d)} di luar jangka IBL`);
+      }
+    });
+  }
+
+  const pop = byId('prog-popover');
+  const popC = byId('prog-popover-content');
+  if(issues.length){ popC.innerHTML = issues.join(''); }
+  else { popC.innerHTML = '<div>Semua paket lengkap dalam jangka yang sesuai.</div>'; }
+
+  // wire info button show/hide (click toggles, hover shows temporarily)
+  const infoBtn = byId('prog-info');
+  if(infoBtn){
+    let hoverTimer=null;
+    infoBtn.onclick = ()=>{ pop.style.display = (pop.style.display==='none'?'block':'none'); };
+    infoBtn.onmouseenter = ()=>{ if(hoverTimer) clearTimeout(hoverTimer); pop.style.display='block'; };
+    infoBtn.onmouseleave = ()=>{ hoverTimer = setTimeout(()=>{ pop.style.display='none'; }, 350); };
+    pop.onmouseenter = ()=>{ if(hoverTimer) clearTimeout(hoverTimer); };
+    pop.onmouseleave = ()=>{ pop.style.display='none'; };
+  }
 }
 
 // ====== LIST VAKSIN ======
@@ -672,7 +725,10 @@ function renderVaxList(){
   const rec = currentChild.records[rule.id] || null;
   const hasRecord = Boolean(rec);
   const hasDate = Boolean(st.date);
-    const ideal = idealDateFor(rule,currentChild.dob);
+  const ideal = idealDateFor(rule,currentChild.dob);
+  const today = todayISO();
+  // If today is within 30 days before ideal (inclusive), batch input is required now
+  const batchNow = (today >= addDaysUTC(ideal, -30) && today <= ideal);
     const formId=`form-${rule.id}`;
 
     const row=document.createElement('div');
@@ -701,7 +757,7 @@ function renderVaxList(){
       <!-- Input actions: tanggal / lengkap / tidak diberikan (only when not completed) -->
       ${(st.type==='done' || st.type==='not_given' || st.type==='kejar') ? '' : `
       <div class="mt-3 grid grid-cols-3 gap-2">
-        <button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>
+        ${batchNow? '': '<button class="btn btn-ghost w-full" data-action="tanggal">Input Tanggal Saja</button>'}
         <button class="btn btn-primary w-full" data-action="lengkap">Input dengan Batch</button>
         <button class="btn btn-ghost w-full" data-action="notgiven">Tidak Diberikan</button>
       </div>`}
