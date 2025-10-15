@@ -518,13 +518,12 @@ function statusFor(rule){
   // Special-case short-window vaccines (e.g., HB0) where notAfterDays applies
   if(rule.ideal?.hours){
     const max = addDaysUTC(currentChild.dob, (rule.notAfterDays ?? 7));
-    if(today > max){
-      // beyond allowable window — vaccine cannot be given or counted
-      return {type:'not_given', text:'Tidak Diberikan'};
-    }
-    // still within HB0 window
+    // before ideal: hide
     if(today < ideal) return {type:'hidden'};
-    return {type:'due',text:'Sesuai Jadwal'};
+    // within HB0 allowable window: due
+    if(today <= max) return {type:'due', text:'Sesuai Jadwal'};
+    // beyond HB0 window but not explicitly marked notGiven yet: show as late/unpursued
+    return {type:'late', text:'Belum Input'};
   }
 
   // For other vaccines, if today is before ideal, hide; if after a late threshold
