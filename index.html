@@ -598,14 +598,45 @@ function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.
 // ====== COMPLETENESS CHIPS (dummy evaluasi cepat) ======
 function renderProgramChips(){
   // Sederhana: jika sebagian besar paket bayi ada, tandai b-green, dll. (placeholder)
+  // Helper: check if a recorded date is within dob + months + 29 days (inclusive)
+  const isInWindow = (dateISO, monthsMax)=>{
+    if(!dateISO) return false;
+    try{
+      const start = currentChild.dob;
+      const end = addUTC(currentChild.dob, {months: monthsMax, days:29});
+      return dateISO >= start && dateISO <= end;
+    }catch(e){ return false; }
+  };
+
+  // has: vaccine is considered present if record exists and not marked notGiven
+  // For IDL/IBL counting we further require that the recorded date falls within program window
   const has = id => {
     const r = currentChild.records[id];
     if(!r) return false;
     if(typeof r==='object' && r.notGiven) return false;
-    return true;
+    // recorded could be string date or object {date,...}
+    const d = (typeof r === 'string') ? r : (r && r.date);
+    return Boolean(d);
   };
-  const idlOk = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'].every(has);
-  const iblOk = idlOk && ['pentabio4','mr2'].every(has);
+  // IDL window: 0 - 11 months + 29 days
+  const idlList = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'];
+  const idlOk = idlList.every(id=>{
+    const r = currentChild.records[id];
+    if(!r) return false;
+    if(typeof r==='object' && r.notGiven) return false;
+    const d = (typeof r === 'string') ? r : (r && r.date);
+    return isInWindow(d, 11);
+  });
+  // IBL list (12-23 months): require IDL ok and these within 23 months +29d window
+  const iblList = ['pentabio4','mr2'];
+  const iblOk = idlOk && iblList.every(id=>{
+    const r = currentChild.records[id];
+    if(!r) return false;
+    if(typeof r==='object' && r.notGiven) return false;
+    const d = (typeof r === 'string') ? r : (r && r.date);
+    // for IBL, acceptable window starts at 12 months; we'll check within 23 months window
+    return isInWindow(d, 23) && (diffYMD(currentChild.dob, d).years*12 + diffYMD(currentChild.dob, d).months >= 12);
+  });
   const biasOk = ['mr_school','dt_school','td_school_2','td_school_5'].every(has);
   const ageMonths = diffYMD(currentChild.dob,todayISO()).years*12 + diffYMD(currentChild.dob,todayISO()).months;
 
