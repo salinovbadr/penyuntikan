@@ -1,3 +1,4 @@
+function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Belum Input</span>`; if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`; return '' }
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -469,7 +470,7 @@ function statusFor(rule){
   return {type:'due',text:'Sesuai Jadwal'};
 }
 
-function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Terlambat</span>`; if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`; return '' }
+function badge(st){ if(st.type==='done') return `<span class="badge b-green">Selesai</span>`; if(st.type==='late') return `<span class="badge b-red">Belum Input</span>`; if(st.type==='due') return `<span class="badge b-amber">Sesuai Jadwal</span>`; return '' }
 
 function fillBatchOptions(selectEl, vaxId){ selectEl.innerHTML=''; const arr=DB.batches[vaxId]||[]; const now=todayISO(); arr.forEach(b=>{ const disabled=!b.active || b.dosesRemaining<=0 || b.exp<now; const opt=document.createElement('option'); opt.value=b.code; opt.textContent=`${b.code} · exp ${fmtID(b.exp)}` + (!b.active?' · non-aktif':'') + (b.exp<now?' · expired':''); opt.disabled=disabled; selectEl.appendChild(opt); }); if(selectEl.options.length===0){ const o=document.createElement('option'); o.textContent='Tidak ada batch tersedia'; selectEl.appendChild(o); } }
 
@@ -484,7 +485,16 @@ function renderProgramChips(){
 
   const irlOk = (ageMonths<12? idlOk : ageMonths<24? iblOk : (iblOk && biasOk));
 
-  const setChip=(id,ok)=>{ const el=byId(id); el.textContent = ok? 'Ya' : 'Tidak'; el.className = `badge ${ok?'b-green':'b-amber'}`; };
+  const setChip=(id,ok)=>{
+    const el = byId(id);
+    const row = el ? el.parentElement : null;
+    if(ok){
+      if(el){ el.textContent = 'Ya'; el.className = 'badge b-green'; }
+      if(row) row.style.display = '';
+    } else {
+      if(row) row.style.display = 'none';
+    }
+  };
   setChip('chip-idl', idlOk);
   setChip('chip-ibl', iblOk);
   setChip('chip-bias', biasOk);
@@ -550,7 +560,6 @@ function renderVaxList(){
             <button class="btn btn-primary flex-1" data-save>Simpan</button>
             <button class="btn btn-ghost" data-cancel>Batal</button>
           </div>
-          <p class="text-xs text-slate-500">* Terlambat dihitung jika lewat <b>jadwal + 29 hari</b>.</p>
         </div>
       </div>
     `;
