@@ -172,17 +172,8 @@
     <!-- HIGHLIGHT: Program Completeness (IDL / IBL / ISL / IRL) -->
     <section class="mt-5">
       <div class="card p-4 bg-indigo-50 border border-indigo-100">
-        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-2">
           <h3 class="text-slate-800 font-semibold">Kelengkapan Program</h3>
-          <div class="flex items-center gap-3">
-            <div class="text-sm text-slate-500">Status keseluruhan</div>
-            <button id="prog-info" class="p-1 rounded-full hover:bg-slate-100" title="Info kelengkapan program">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="prog-popover" class="card p-3 mt-2" style="display:none; position:relative; z-index:20;">
-          <div id="prog-popover-content" class="text-sm text-slate-600">Ringkasan kelengkapan akan muncul di sini.</div>
         </div>
         <div id="program-completeness" class="pt-1">
           <div class="space-y-2 text-sm">
@@ -713,21 +704,7 @@ function renderProgramChips(){
     });
   }
 
-  const pop = byId('prog-popover');
-  const popC = byId('prog-popover-content');
-  if(issues.length){ popC.innerHTML = issues.join(''); }
-  else { popC.innerHTML = '<div>Semua paket lengkap dalam jangka yang sesuai.</div>'; }
-
-  // wire info button show/hide (click toggles, hover shows temporarily)
-  const infoBtn = byId('prog-info');
-  if(infoBtn){
-    let hoverTimer=null;
-    infoBtn.onclick = ()=>{ pop.style.display = (pop.style.display==='none'?'block':'none'); };
-    infoBtn.onmouseenter = ()=>{ if(hoverTimer) clearTimeout(hoverTimer); pop.style.display='block'; };
-    infoBtn.onmouseleave = ()=>{ hoverTimer = setTimeout(()=>{ pop.style.display='none'; }, 350); };
-    pop.onmouseenter = ()=>{ if(hoverTimer) clearTimeout(hoverTimer); };
-    pop.onmouseleave = ()=>{ pop.style.display='none'; };
-  }
+  // We intentionally do not render the program info popover here — issues are available for debugging via console when needed.
 }
 
 // ====== LIST VAKSIN ======
