@@ -54,23 +54,182 @@
   </style>
 </head>
 <body class="bg-slate-50">
+<!-- Global Logout (overlay) -->
+<button id="btnLogout"
+  class="fixed z-50 top-4 right-4 p-2 rounded-full bg-white/80 backdrop-blur border border-slate-200 shadow hover:bg-white text-slate-600"
+  title="Keluar" aria-label="Keluar" onclick="AUTH.logout()" style="display:none">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+    <path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+  </svg>
+</button>
 
-<!-- HOME -->
-<section id="view-home" data-view class="active max-w-xl mx-auto px-5 py-10">
-  <div class="text-center mb-10">
+<!-- LOGIN -->
+<section id="view-login" data-view class="max-w-xl mx-auto px-5 py-10">
+  <div class="text-center mb-8">
     <div class="h-16 w-16 mx-auto rounded-full bg-indigo-50 grid place-items-center text-indigo-600">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Syringe icon">
-        <path d="M10 6l8 8"/>
-        <path d="M15 5l4 4"/>
-        <path d="M5 20l6-6"/>
-        <path d="M16 7l1.5-1.5a2.121 2.121 0 013 3L19 9"/>
-        <path d="M7 17L3 21"/>
-        <path d="M8 12l4 4"/>
-        <rect x="8" y="8" width="6" height="2" transform="rotate(45 8 8)"/>
-      </svg>
+         <!-- Ikon Suntikan (bold, miring 45°) -->
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="3.2"
+              stroke-linecap="round" stroke-linejoin="round"
+              class="h-8 w-8" aria-label="Ikon suntikan">
+           <g transform="rotate(45 12 12)">
+             <!-- jarum -->
+             <line x1="3" y1="12" x2="7" y2="12"/>
+             <!-- barel (tabung) -->
+             <rect x="7" y="9" width="8" height="6" rx="1.8"/>
+             <!-- garis takaran di dalam barel (aksen miring) -->
+             <line x1="9" y1="10.5" x2="13" y2="13.5"/>
+             <!-- batang plunger -->
+             <line x1="15" y1="12" x2="21" y2="12"/>
+             <!-- pegangan plunger (membuat 'T' di ujung) -->
+             <line x1="21" y1="9.5" x2="21" y2="14.5"/>
+           </g>
+         </svg>
     </div>
     <h1 class="mt-4 text-3xl font-extrabold text-slate-900">Sistem Imunisasi Anak</h1>
-    <p class="text-slate-500">Input NIK untuk memulai pencatatan</p>
+  </div>
+
+  <div class="card p-6">
+    <label class="block text-slate-700 font-semibold">Username</label>
+    <input id="login-username" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200" placeholder="username" />
+
+    <label class="block text-slate-700 font-semibold mt-4">Password</label>
+    <input id="login-password" type="password" class="mt-2 w-full px-4 py-4 rounded-xl border border-slate-200" placeholder="••••••••" />
+
+   <!--  <div class="flex items-center justify-between mt-3">
+      <label class="inline-flex items-center gap-2 text-slate-600 text-sm">
+        <input id="login-remember" type="checkbox" class="rounded"> Ingat saya
+      </label>
+      <a class="text-slate-400 text-sm" href="#" onclick="alert('Hubungi admin untuk reset sandi');return false;">Lupa kata sandi?</a>
+    </div> -->
+
+    <button id="btnLogin" class="btn btn-primary w-full mt-5">Masuk</button>
+    <p id="login-error" class="text-sm text-rose-600 mt-3 hidden">Username atau password salah.</p>
+  </div>
+</section>
+
+<!-- HUB (Landing setelah login) -->
+<section id="view-hub" data-view class="max-w-xl mx-auto px-5 py-10">
+  <div class="text-center mb-8">
+    <div class="h-16 w-16 mx-auto rounded-full bg-indigo-50 grid place-items-center text-indigo-600">
+         <!-- Ikon Suntikan (bold, miring 45°) -->
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="3.2"
+              stroke-linecap="round" stroke-linejoin="round"
+              class="h-8 w-8" aria-label="Ikon suntikan">
+           <g transform="rotate(45 12 12)">
+             <!-- jarum -->
+             <line x1="3" y1="12" x2="7" y2="12"/>
+             <!-- barel (tabung) -->
+             <rect x="7" y="9" width="8" height="6" rx="1.8"/>
+             <!-- garis takaran di dalam barel (aksen miring) -->
+             <line x1="9" y1="10.5" x2="13" y2="13.5"/>
+             <!-- batang plunger -->
+             <line x1="15" y1="12" x2="21" y2="12"/>
+             <!-- pegangan plunger (membuat 'T' di ujung) -->
+             <line x1="21" y1="9.5" x2="21" y2="14.5"/>
+           </g>
+         </svg>
+    </div>
+    <h1 class="mt-4 text-3xl font-extrabold text-slate-900">Sistem Imunisasi Anak</h1>
+    <p class="text-slate-500">Pilih menu untuk memulai</p>
+  </div>
+
+<div class="grid gap-4">
+  <!-- Kartu: Catat Imunisasi -->
+  <div id="cardGoImmunize"
+       class="card p-5 cursor-pointer transition ring-0 hover:ring-2 hover:ring-indigo-200 group"
+       role="button" tabindex="0" aria-label="Buka Catat Imunisasi">
+    <div class="flex items-start gap-4">
+      <div class="h-11 w-11 rounded-xl bg-indigo-50 text-indigo-600 grid place-items-center">
+        <!-- ikon suntikan (boleh pakai ikonmu sendiri) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Catat Imunisasi" class="h-6 w-6">
+  <path d="M9 3h6a2 2 0 0 1 2 2v1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a2 2 0 0 1 2-2z"/>
+  <path d="M9 5h6"/>
+  <path d="M8 13l3 3 5-5"/>
+</svg>
+      </div>
+      <div class="flex-1">
+        <h3 class="font-semibold text-slate-800">Catat Imunisasi</h3>
+        <p class="text-sm text-slate-600 mt-1">Cari anak dengan NIK dan input imunisasi hari ini.</p>
+      </div>
+      <!-- panah kanan tebal, ujung bulat -->
+      <div class="h-10 w-10 grid place-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+             class="h-6 w-6 text-slate-400 group-hover:text-slate-600"
+             fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 4l8 8-8 8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kartu: Daftar Anak -->
+  <div id="cardGoList"
+       class="card p-5 cursor-pointer transition ring-0 hover:ring-2 hover:ring-indigo-200 group"
+       role="button" tabindex="0" aria-label="Buka Daftar Anak">
+    <div class="flex items-start gap-4">
+      <div class="h-11 w-11 rounded-xl bg-indigo-50 text-indigo-600 grid place-items-center">
+        <!-- ikon dua orang -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-label="Cari Anak" class="h-6 w-6">
+  <!-- kepala -->
+  <circle cx="12" cy="8" r="3"/>
+  <!-- bahu/badan -->
+  <path d="M5.5 18.5c1.5-2.4 4-4 6.5-4s5 1.6 6.5 4"/>
+</svg>
+
+
+      </div>
+      <div class="flex-1">
+        <h3 class="font-semibold text-slate-800">Daftar Anak</h3>
+        <p class="text-sm text-slate-600 mt-1">Lihat dan kelola seluruh anak terdaftar.</p>
+      </div>
+      <div class="h-10 w-10 grid place-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+             class="h-6 w-6 text-slate-400 group-hover:text-slate-600"
+             fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 4l8 8-8 8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- DAFTAR ANAK -->
+<section id="view-list" data-view class="max-w-xl mx-auto px-5 py-6">
+  <div class="flex items-center gap-3 text-slate-700 mb-4">
+    <button class="p-2 -ml-2 hover:bg-slate-100 rounded-full" onclick="nav('hub')" aria-label="Kembali">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span>Daftar Anak</span>
+  </div>
+
+  <div class="card p-5">
+    <label class="block text-slate-700 font-semibold">Cari (Nama/NIK)</label>
+    <input id="list-search" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="Ketik nama atau NIK..." />
+  </div>
+
+  <div id="list-results" class="mt-4">
+    <!-- hasil render diisi via JS -->
+  </div>
+</section>
+
+<!-- HOME -->
+<section id="view-home" data-view class="max-w-xl mx-auto px-5 py-10">
+  <div class="text-center mb-10">
+      <div class="flex items-center gap-3 text-slate-700 mb-4">
+    <button class="p-2 -ml-2 hover:bg-slate-100 rounded-full" onclick="nav('hub')" aria-label="Kembali">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span>Catat Imunisasi</span>
+  </div>
+    <h1 class="mt-4 text-3xl font-extrabold text-slate-900">Input NIK untuk memulai pencatatan</h1><!-- 
+    <p class="text-slate-500">Input NIK untuk memulai pencatatan</p> -->
   </div>
 
   <div class="card p-6">
@@ -80,8 +239,8 @@
       <div class="text-xs text-slate-400 mt-1"><span id="nikCount">0</span>/16 digit</div>
     </div>
     <div class="flex gap-3 mt-4">
-      <button id="btnCari" class="btn btn-primary flex-1">Cari Data</button>
-      <button id="btnTambahBaru" class="btn btn-ghost" title="Registrasi cepat anak baru">+</button>
+      <button id="btnCari" class="btn btn-primary flex-1">Cari</button>
+      <!-- <button id="btnTambahBaru" class="btn btn-ghost" title="Registrasi cepat anak baru">+</button> -->
     </div>
   </div>
 </section>
@@ -131,15 +290,24 @@
     <div class="max-w-xl mx-auto px-5 pb-6">
       <div class="flex items-center gap-4">
         <div class="h-14 w-14 rounded-full bg-white/20 grid place-items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Syringe icon">
-            <path d="M10 6l8 8"/>
-            <path d="M15 5l4 4"/>
-            <path d="M5 20l6-6"/>
-            <path d="M16 7l1.5-1.5a2.121 2.121 0 013 3L19 9"/>
-            <path d="M7 17L3 21"/>
-            <path d="M8 12l4 4"/>
-            <rect x="8" y="8" width="6" height="2" transform="rotate(45 8 8)"/>
-          </svg>
+         <!-- Ikon Suntikan (bold, miring 45°) -->
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="3.2"
+              stroke-linecap="round" stroke-linejoin="round"
+              class="h-8 w-8" aria-label="Ikon suntikan">
+           <g transform="rotate(45 12 12)">
+             <!-- jarum -->
+             <line x1="3" y1="12" x2="7" y2="12"/>
+             <!-- barel (tabung) -->
+             <rect x="7" y="9" width="8" height="6" rx="1.8"/>
+             <!-- garis takaran di dalam barel (aksen miring) -->
+             <line x1="9" y1="10.5" x2="13" y2="13.5"/>
+             <!-- batang plunger -->
+             <line x1="15" y1="12" x2="21" y2="12"/>
+             <!-- pegangan plunger (membuat 'T' di ujung) -->
+             <line x1="21" y1="9.5" x2="21" y2="14.5"/>
+           </g>
+         </svg>
         </div>
         <div class="flex-1">
           <h1 id="c-name" class="text-2xl font-semibold leading-tight">-</h1>
@@ -252,6 +420,129 @@
 </section>
 
 <script>
+// --- MINIMAL AUTH (agar Logout & guard jalan) ---
+const AUTH = {
+  KEY: 'session_user',
+  loadSession(){ try{ return JSON.parse(localStorage.getItem(this.KEY)||'null'); }catch{ return null; } },
+  saveSession(obj){ localStorage.setItem(this.KEY, JSON.stringify(obj)); },
+  logout(){
+    localStorage.removeItem(this.KEY);
+    // bersihkan UI state ringan jika perlu
+    document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active'));
+    const login = document.getElementById('view-login') || document.getElementById('view-home'); // fallback ke home jika belum punya halaman login
+    if(login) login.classList.add('active');
+  }
+};
+// ---- PERSIST DB ke localStorage ----
+const DB_KEY = 'imunisasi_db_v1';
+
+function saveDB(){
+  try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch(e){}
+}
+
+function loadDB(){
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.children) DB.children = parsed.children;
+      if(parsed.batches)  DB.batches  = parsed.batches;
+    }
+  } catch(e){}
+}
+
+// (opsional) refresh list kalau halaman list sedang terbuka
+function refreshListIfVisible(){
+  const v = document.getElementById('view-list');
+  if(v && v.classList.contains('active')) renderChildList();
+}
+
+
+// --- GANTI nav(view) lama dengan ini ---
+// === LOGIN wiring ===
+(function wireLogin(){
+  const btn = document.getElementById('btnLogin');
+  if(!btn) return;
+
+  btn.addEventListener('click', () => {
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    const err = document.getElementById('login-error');
+
+    // kredensial dummy
+    const OK_USER = 'petugas';
+    const OK_PASS = '123456';
+
+    if (u === OK_USER && p === OK_PASS) {
+      AUTH.saveSession({ username: u, loginAt: Date.now() });
+      if (err) err.classList.add('hidden');
+      updateAuthUI(true);
+      nav('hub');
+    } else {
+      if (err) err.classList.remove('hidden');
+    }
+  });
+})();
+
+// Buat kartu bisa di-klik dan pakai keyboard
+function makeCardLink(id, handler){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('click', handler);
+  el.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault(); handler();
+    }
+  });
+}
+
+// Arahkan ke halaman yang sesuai
+makeCardLink('cardGoImmunize', ()=> {
+  // pakai halaman input NIK yang sudah ada
+  nav('home');
+});
+
+makeCardLink('cardGoList', ()=> {
+  openList(); // <- ini akan nav('list') + renderChildList() + wiring input
+});
+
+
+
+function nav(view){
+  // kalau kamu belum punya halaman login, guard ini aman-aman aja (akan jatuh ke view yg diminta)
+  const hasLoginView = !!document.getElementById('view-login');
+  if(hasLoginView && view !== 'login' && !AUTH.loadSession()){
+    document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-login').classList.add('active');
+    return;
+  }
+  document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById(`view-${view}`);
+  if(target){
+  target.classList.add('active');
+  if(view==='list') renderChildList(); // jaga-jaga: render saat view list aktif
+}
+
+}
+
+function updateAuthUI(isLoggedIn = !!AUTH.loadSession()){
+  const btnLogout = document.getElementById('btnLogout');
+  if(btnLogout){
+    btnLogout.style.display = isLoggedIn ? '' : 'none';
+  }
+}
+
+// Patch AUTH.logout agar sekalian sembunyikan tombol:
+AUTH.logout = function(){
+  localStorage.removeItem(this.KEY);
+  document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active'));
+  const login = document.getElementById('view-login') || document.getElementById('view-home');
+  if(login){
+    login.classList.add('active');
+    login.style.removeProperty('display'); // jaga-jaga
+  }
+  updateAuthUI(false);
+};
 // ====== DB MOCK ======
 const DB = {
   children: {
@@ -286,6 +577,7 @@ const DB = {
   hpv_kls5:    [{code:'HPV-5F',  exp:'2028-12-31',active:true,dosesRemaining:50}]
   }
 };
+loadDB();
 
 // ====== RULES (disingkat) ======
 const RULES = [
@@ -530,8 +822,15 @@ function ageLabel(dob,ref=todayISO()){ const {years,months,days}=diffYMD(dob,ref
 // ====== NAV + HOME ======
 byId('nikInput').addEventListener('input',e=>{ byId('nikCount').textContent=e.target.value.length; });
 byId('btnCari').addEventListener('click',()=>{ const nik=byId('nikInput').value.trim(); if(nik.length!==16){ alert('NIK harus 16 digit.'); return; } if(DB.children[nik]){ openChild(nik); } else { openRegister(nik); } });
-byId('btnTambahBaru').addEventListener('click',()=>{ const nik=byId('nikInput').value.padEnd(16,'0').slice(0,16); openRegister(nik); });
-function nav(view){ document.querySelectorAll('[data-view]').forEach(v=>v.classList.remove('active')); byId(`view-${view}`).classList.add('active'); }
+// byId('btnTambahBaru').addEventListener('click',()=>{ const nik=byId('nikInput').value.padEnd(16,'0').slice(0,16); openRegister(nik); });
+
+// === HUB wiring ===
+(function wireHub(){
+  const a = document.getElementById('btnGoImmunize');
+  const b = document.getElementById('btnGoList');
+  if(a) a.onclick = ()=> nav('home'); // catat imunisasi = halaman NIK
+  if(b) b.onclick = ()=> openList();  // daftar anak
+})();
 
 // ====== REGISTER ======
 function openRegister(nik){
@@ -542,7 +841,8 @@ function openRegister(nik){
   byId('reg-usia').textContent=dobFromNik?`Usia: ${ageLabel(dobFromNik)}`:'Usia: -';
   byId('reg-sex').value=sexFromNIK(nik);
   byId('reg-dob').oninput=()=>{ const v=byId('reg-dob').value; byId('reg-usia').textContent=v?`Usia: ${ageLabel(v)}`:'Usia: -'; };
-  byId('btnSimpanReg').onclick=()=>{ const name=byId('reg-name').value.trim(); const dob=byId('reg-dob').value; const parent=byId('reg-parent').value.trim(); const sex=byId('reg-sex').value; if(!name||!dob||!parent){ alert('Lengkapi semua data.'); return; } DB.children[nik]={nik,name,parent,dob,sex,records:{},measures:[],isStudentSD:false}; openChild(nik); };
+  byId('btnSimpanReg').onclick=()=>{ const name=byId('reg-name').value.trim(); const dob=byId('reg-dob').value; const parent=byId('reg-parent').value.trim(); const sex=byId('reg-sex').value; if(!name||!dob||!parent){ alert('Lengkapi semua data.'); return; } DB.children[nik]={nik,name,parent,dob,sex,records:{},measures:[],isStudentSD:false}; saveDB();
+openChild(nik); };
 }
 
 // ====== CHILD ======
@@ -928,7 +1228,7 @@ function renderVaxList(){
     // External 'Tidak Diberikan' button (next to input buttons)
     const btnNotGivenExt = row.querySelector('[data-action="notgiven"]');
     if(btnNotGivenExt){
-      btnNotGivenExt.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; renderProgramChips(); renderVaxList(); });
+      btnNotGivenExt.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; saveDB();refreshListIfVisible();renderProgramChips(); renderVaxList(); });
     }
 
     form.querySelector('[data-cancel]').onclick=()=>{ form.classList.remove('show'); };
@@ -936,7 +1236,7 @@ function renderVaxList(){
     // Handle 'Tidak Diberikan' explicit action
     const btnNotGiven = form.querySelector('[data-notgiven]');
     if(btnNotGiven){
-      btnNotGiven.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; renderProgramChips(); renderVaxList(); });
+      btnNotGiven.addEventListener('click', (e)=>{ e.preventDefault(); if(!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return; currentChild.records[rule.id] = { notGiven: true }; saveDB();refreshListIfVisible();renderProgramChips(); renderVaxList(); });
     }
 
     form.querySelector('[data-save]').onclick=()=>{
@@ -959,8 +1259,11 @@ function renderVaxList(){
       }
       // If previously marked notGiven, overwrite with actual date record
       currentChild.records[rule.id]=payload;
-      renderProgramChips();
-      renderVaxList();
+saveDB();
+refreshListIfVisible();
+renderProgramChips();
+renderVaxList();
+
     };
 
   });
@@ -1007,6 +1310,8 @@ function renderMeasureList(){
   });
 }
 
+
+
 let WEIGH_MODE='visit';
 function openWeigh(mode='visit'){
   WEIGH_MODE=mode;
@@ -1036,6 +1341,8 @@ function openWeigh(mode='visit'){
     } else {
       currentChild.measures.push({type:'visit',date,weight,height});
     }
+    saveDB();
+refreshListIfVisible();
     byId('w-weight').value=''; byId('w-height').value=''; byId('w-date').disabled=false;
     nav('child'); renderMeasureList();
   };
@@ -1131,8 +1438,102 @@ function fmtZ(z){ if(z==null||!isFinite(z)) return '—'; return z>0?`+${z.toFix
   }catch(e){ console.error('DEV test failed:', e.message); }
 })();
 
+function openList(){
+  nav('list');
+  renderChildList();
+  const input = byId('list-search');
+  if(input && !input._wired){
+    input.addEventListener('input', renderChildList);
+    input._wired = true;
+  }
+}
+
+function renderChildList(){
+  const q = (byId('list-search')?.value || '').trim().toLowerCase();
+  const wrap = byId('list-results');
+  const entries = Object.values(DB.children || {});
+  const filtered = entries.filter(c=>{
+    const name = (c.name||'').toLowerCase();
+    const nik  = (c.nik||'').toLowerCase();
+    return !q || name.includes(q) || nik.includes(q);
+  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+  if(!filtered.length){
+    wrap.innerHTML = `
+      <div class="card p-6 text-center text-slate-600">
+        Belum ada data anak. Mulai dari <b>Catat Imunisasi</b>.
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = '';
+  filtered.forEach(c=>{
+    const usia = ageLabel(c.dob, todayISO());
+    // hitung ringkas status
+    let done=0,due=0,late=0;
+    (RULES||[]).forEach(r=>{
+      const st = (function(){ 
+        const prev = currentChild; currentChild = c;
+        const s = statusFor(r);
+        currentChild = prev; 
+        return s;
+      })();
+      if(!st || st.type==='hidden' || st.type==='not_given') return;
+      if(st.type==='done') done++;
+      else if(st.type==='due') due++;
+      else if(st.type==='late') late++;
+    });
+
+    const row = document.createElement('div');
+    row.className = 'card p-5 mb-3';
+    row.innerHTML = `
+  <div class="flex items-start justify-between gap-3">
+    <div class="min-w-0">
+      <div class="font-semibold text-slate-800">${c.name || '-'}</div>
+      <div class="text-sm text-slate-600">
+        NIK: <b>${c.nik}</b> · Usia: ${usia}
+      </div>
+      <div class="text-xs text-slate-500 mt-1">
+        ${done} selesai · ${due} sesuai jadwal · ${late} belum input
+      </div>
+    </div>
+
+    <!-- Chevron kanan -->
+    <div aria-hidden="true" class="shrink-0 h-10 w-10 grid place-items-center text-slate-400 group-hover:text-slate-600">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+           class="h-6 w-6" fill="none" stroke="currentColor"
+           stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 4l8 8-8 8"/>
+      </svg>
+    </div>
+  </div>
+`;
+row.className = 'card p-5 mb-3 cursor-pointer transition ring-0 hover:ring-2 hover:ring-indigo-200 group';
+// seluruh card klik → buka detail anak
+row.setAttribute('role', 'button');
+row.setAttribute('tabindex', '0');
+row.addEventListener('click', () => openChild(c.nik));
+row.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openChild(c.nik); }
+});
+
+    wrap.appendChild(row);
+  });
+}
+
+
 // Boot example
 // openChild('3574015706250002');
+// Boot
+if(!AUTH.loadSession()){
+  updateAuthUI(false);
+  nav('login');
+} else {
+  updateAuthUI(true);
+  nav('hub'); // ← menuju landing baru
+}
+
+
 </script>
 </body>
 </html>
