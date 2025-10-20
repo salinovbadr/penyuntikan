@@ -207,7 +207,7 @@
         color: #334155;
         border-color: #e2e8f0
       }
-      /* program completeness now visible; JS controls rows */
+      /*#program-completeness { display: none; }*/
     </style>
   </head>
   <body class="bg-slate-50">
@@ -1656,8 +1656,7 @@ function initTabs() {
             return `
               <span class="badge b-green">${st.text || 'Jadwal Ideal'}</span>`;
           case 'kejar':
-            return `
-              <span class="badge b-amber">Jadwal Kejar</span>`;
+            return `<span class="badge b-amber">Jadwal Kejar</span>`;
           case 'due':
             return `
               <span class="badge b-amber">Belum Dicatat</span>`;
@@ -1746,8 +1745,9 @@ function initTabs() {
             if (opts.needsWindow === 'IBL' && !inIBLWindow(d)) allInWindow = false;
           }
         }
-        if (!allResolved) {
-  // Jika belum lengkap dan usia anak sudah melewati akhir window paket → tandai TIDAK (NO_PAST)
+        if (!allResolved) return 'PENDING'; // masih ada antigen yang belum dicatat sama sekali
+        if (anyNotGiven) return 'NO'; // permintaanmu: kalau ada NOT_GIVEN → paket = TIDAK
+        if (!allInWindow) {
   if (opts.needsWindow) {
     const now = todayISO();
     let end = null;
@@ -1755,48 +1755,44 @@ function initTabs() {
     if (opts.needsWindow === 'IBL') end = addUTC(currentChild.dob, { months: 23, days: 29 });
     if (end && now > end) return 'NO_PAST';
   }
-  return 'PENDING';
+  return 'NO';
 }
- // masih ada antigen yang belum dicatat sama sekali
-        if (anyNotGiven) return 'NO'; // permintaanmu: kalau ada NOT_GIVEN → paket = TIDAK
-        if (!allInWindow) return 'NO'; // DONE tapi di luar jendela paket → TIDAK
-        if (typeof opts.requires === 'function' && opts.requires() !== 'YES') return 'NO';  return 'YES';
-}
-
+ // DONE tapi di luar jendela paket → TIDAK
+        if (typeof opts.requires === 'function' && opts.requires() !== 'YES') return 'NO';
+        return 'YES';
+      }
 
       function renderProgramChips() {
   // daftar antigen per paket
-  const idlList  = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'];
-  const iblList  = ['pentabio4','mr2'];
-  const biasList = ['mr_school','dt_school','td_school_2','td_school_5'];
-  // Untuk IRL kita anggap titik akhir program (kelas 5/Td) – bergantung BIAS
-  const irlList  = ['td_school_5'];
+        const idlList  = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'];
+        const iblList  = ['pentabio4','mr2'];
+        const biasList = ['mr_school','dt_school','td_school_2','td_school_5'];
+        const irlList  = ['td_school_5'];
 
   // hitung state per paket
-  const idlState  = evalPackage(idlList,  { needsWindow:'IDL' });
-  const iblState  = evalPackage(iblList,  { needsWindow:'IBL', requires: ()=>idlState });
+        const idlState  = evalPackage(idlList,  { needsWindow:'IDL' });
+        const iblState  = evalPackage(iblList,  { needsWindow:'IBL', requires: ()=>idlState });
   const biasState = evalPackage(biasList, { /* tanpa window usia */ });
-  const irlState  = evalPackage(irlList,  { requires: ()=>biasState });
+        const irlState  = evalPackage(irlList,  { requires: ()=>biasState });
 
   // helper set chip
-  const setChip = (chipId, state) => {
-    const el = byId(chipId);
-    if (!el) return;
-    const row = el.parentElement; // baris <div class="flex items-center ...">
-    // Tampilkan baris hanya untuk YES dan NO_PAST (gagal karena usia lewat)
-    if (state === 'YES' || state === 'NO_PAST') {
-      row.style.display = '';
-    } else {
-      row.style.display = 'none';
+        const setChip = (chipId, state) => {
+          const el = byId(chipId);
+          if (!el) return;
+          const row = el.parentElement;
+
+    // Tampilkan baris hanya jika YES atau NO_PAST (gagal karena usia paket sudah lewat)
+          if (state === 'YES' || state === 'NO_PAST') {
+            row.style.display = '';
+          } else {
+      row.style.display = 'none';       // PENDING / NO (belum waktunya) disembunyikan
     }
+
     if (state === 'YES') {
       el.textContent = 'Ya';
       el.className = 'badge b-green';
-    } else if (state === 'NO_PAST') {
-      el.textContent = 'Tidak';
-      el.className = 'badge b-amber';
     } else {
-      // hidden
+      // NO_PAST dirender “Tidak” (kuning) agar terlihat kenapa kartu tetap muncul
       el.textContent = 'Tidak';
       el.className = 'badge b-amber';
     }
@@ -1807,18 +1803,14 @@ function initTabs() {
   setChip('chip-bias', biasState);
   setChip('chip-irl',  irlState);
 
-  // --- LOGIKA tampil/sembunyi kartu "Kelengkapan Imunisasi" ---
+  // Tampilkan kartu bila minimal ada 1 paket YES atau NO_PAST
   const progWrap = byId('program-completeness');
-  const card = progWrap ? progWrap.parentElement : null;
-  if (!card) return;
-
-  // Tampilkan kartu jika MINIMAL ada satu paket yang bernilai 'YES'
-  const states = [idlState, iblState, biasState, irlState].filter(Boolean);
-  const anyYes = (states.length > 0) && states.some(s => s === 'YES');
-
-  card.style.display = anyYes ? '' : 'none';
-  if (progWrap) progWrap.style.display = anyYes ? '' : 'none';
-}
+  if (progWrap) {
+    const states = [idlState, iblState, biasState, irlState];
+    const show = states.some(s => s === 'YES' || s === 'NO_PAST');
+    progWrap.style.display = show ? '' : 'none';
+  }
+} //  <<— penting: kurung penutup sebelum “LIST VAKSIN”
 
       // ====== LIST VAKSIN ======
       function renderVaxList() {
