@@ -1746,12 +1746,23 @@ function initTabs() {
             if (opts.needsWindow === 'IBL' && !inIBLWindow(d)) allInWindow = false;
           }
         }
-        if (!allResolved) return 'PENDING'; // masih ada antigen yang belum dicatat sama sekali
+        if (!allResolved) {
+  // Jika belum lengkap dan usia anak sudah melewati akhir window paket → tandai TIDAK (NO_PAST)
+  if (opts.needsWindow) {
+    const now = todayISO();
+    let end = null;
+    if (opts.needsWindow === 'IDL') end = addUTC(currentChild.dob, { months: 11, days: 29 });
+    if (opts.needsWindow === 'IBL') end = addUTC(currentChild.dob, { months: 23, days: 29 });
+    if (end && now > end) return 'NO_PAST';
+  }
+  return 'PENDING';
+}
+ // masih ada antigen yang belum dicatat sama sekali
         if (anyNotGiven) return 'NO'; // permintaanmu: kalau ada NOT_GIVEN → paket = TIDAK
         if (!allInWindow) return 'NO'; // DONE tapi di luar jendela paket → TIDAK
-        if (typeof opts.requires === 'function' && opts.requires() !== 'YES') return 'NO';
-        return 'YES';
-      }
+        if (typeof opts.requires === 'function' && opts.requires() !== 'YES') return 'NO';  return 'YES';
+}
+
 
       function renderProgramChips() {
   // daftar antigen per paket
@@ -1772,11 +1783,20 @@ function initTabs() {
     const el = byId(chipId);
     if (!el) return;
     const row = el.parentElement; // baris <div class="flex items-center ...">
-    row.style.display = ''; // biarkan baris terlihat saat kartu ditampilkan
+    // Tampilkan baris hanya untuk YES dan NO_PAST (gagal karena usia lewat)
+    if (state === 'YES' || state === 'NO_PAST') {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
     if (state === 'YES') {
       el.textContent = 'Ya';
       el.className = 'badge b-green';
-    } else { // 'NO' atau 'PENDING' diperlakukan sebagai Tidak
+    } else if (state === 'NO_PAST') {
+      el.textContent = 'Tidak';
+      el.className = 'badge b-amber';
+    } else {
+      // hidden
       el.textContent = 'Tidak';
       el.className = 'badge b-amber';
     }
