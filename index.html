@@ -207,7 +207,7 @@
         color: #334155;
         border-color: #e2e8f0
       }
-      #program-completeness { display: none; }
+      /* program completeness now visible; JS controls rows */
     </style>
   </head>
   <body class="bg-slate-50">
@@ -1656,9 +1656,8 @@ function initTabs() {
             return `
               <span class="badge b-green">${st.text || 'Jadwal Ideal'}</span>`;
           case 'kejar':
-            // Ditandai jelas sebagai "Kejar"
             return `
-              <span class="badge b-amber">${st.text || 'Jadwal Kejar'}</span>`;
+              <span class="badge b-amber">Jadwal Kejar</span>`;
           case 'due':
             return `
               <span class="badge b-amber">Belum Dicatat</span>`;
@@ -1773,12 +1772,11 @@ function initTabs() {
     const el = byId(chipId);
     if (!el) return;
     const row = el.parentElement; // baris <div class="flex items-center ...">
-    if (state === 'PENDING') { row.style.display = 'none'; return; }
-    row.style.display = '';
+    row.style.display = ''; // biarkan baris terlihat saat kartu ditampilkan
     if (state === 'YES') {
       el.textContent = 'Ya';
       el.className = 'badge b-green';
-    } else { // 'NO'
+    } else { // 'NO' atau 'PENDING' diperlakukan sebagai Tidak
       el.textContent = 'Tidak';
       el.className = 'badge b-amber';
     }
@@ -1794,15 +1792,12 @@ function initTabs() {
   const card = progWrap ? progWrap.parentElement : null;
   if (!card) return;
 
-// TAMPILKAN kartu bila ADA paket yang sudah selesai/terjawab (YES/NO).
-// Baris dengan state PENDING tetap disembunyikan per-row (sudah di-set di atas).
-const anyPackageResolved = [idlState, iblState, biasState, irlState]
-  .some(s => s !== 'PENDING');
+  // Tampilkan kartu jika MINIMAL ada satu paket yang bernilai 'YES'
+  const states = [idlState, iblState, biasState, irlState].filter(Boolean);
+  const anyYes = (states.length > 0) && states.some(s => s === 'YES');
 
-// (opsional) kalau mau kartu tetap tampil juga saat semua antigen resolved:
-const allAntigensResolved = (RULES || []).every(r => antigenState(r.id) !== 'PENDING');
-
-card.style.display = (anyPackageResolved || allAntigensResolved) ? '' : 'none';
+  card.style.display = anyYes ? '' : 'none';
+  if (progWrap) progWrap.style.display = anyYes ? '' : 'none';
 }
 
       // ====== LIST VAKSIN ======
