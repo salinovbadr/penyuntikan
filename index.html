@@ -4,7 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Prototype – Sistem Imunisasi Anak v1</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+function openWeighBirthEdit(){
+  const birth = (currentChild.measures || []).find(m => m.type === 'birth') || null;
+  openWeigh('birth');
+  setTimeout(() => {
+    const w = byId('w-weight'); const h = byId('w-height'); const dt = byId('w-date');
+    if (birth){ if (w) w.value = birth.weight ?? ''; if (h) h.value = birth.height ?? ''; if (dt) dt.value = birth.date || currentChild.dob; }
+  }, 0);
+}
+
+</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -207,7 +217,7 @@
         color: #334155;
         border-color: #e2e8f0
       }
-      /*#program-completeness { display: none; }*/
+      /* #program-completeness { display: none; } */
     </style>
   </head>
   <body class="bg-slate-50">
@@ -251,9 +261,14 @@
 <svg width="32px" height="32px" viewBox="0 0 0.8 0.8" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.174 0.429a0.1 0.1 0 0 0 0 0.141l0.057 0.057a0.1 0.1 0 0 0 0.141 0l0.279 -0.279a0.1 0.1 0 0 0 0.029 -0.073l-0.001 -0.056a0.1 0.1 0 0 0 -0.099 -0.098l-0.055 -0.001a0.1 0.1 0 0 0 -0.072 0.029zM0.594 0.291l-0.279 0.279a0.02 0.02 0 0 1 -0.028 0l-0.057 -0.057a0.02 0.02 0 0 1 0 -0.028l0.279 -0.279a0.02 0.02 0 0 1 0.014 -0.006l0.055 0.001a0.02 0.02 0 0 1 0.02 0.02l0.001 0.056a0.02 0.02 0 0 1 -0.006 0.015" fill="#000000"/><path d="M0.441 0.464a0.02 0.02 0 1 1 -0.028 0.028l-0.057 -0.057a0.02 0.02 0 1 1 0.028 -0.028z" fill="#000000"/><path d="M0.229 0.676a0.04 0.04 0 1 1 -0.057 0.057l-0.113 -0.113a0.04 0.04 0 1 1 0.057 -0.057z" fill="#000000"/><path d="M0.375 0.667a0.04 0.04 0 1 1 -0.057 0.057l-0.239 -0.239a0.04 0.04 0 1 1 0.057 -0.057z" fill="#000000"/><path d="M0.526 0.379a0.02 0.02 0 1 1 -0.028 0.028l-0.057 -0.057a0.02 0.02 0 1 1 0.028 -0.028z" fill="#000000"/><path d="M0.2 0.657 0.143 0.6 0.2 0.543 0.257 0.6z" fill="#000000"/><path d="M0.719 0.039a0.03 0.03 0 0 1 0.042 0.042l-0.12 0.12a0.03 0.03 0 0 1 -0.042 -0.042z" fill="#000000"/></svg>
         </div>
         <h1 class="mt-4 text-3xl font-extrabold text-slate-900">Sistem Imunisasi Anak</h1>
-        <p class="text-slate-500">Pilih menu untuk memulai</p>
+        <!-- Entitas Petugas Ribbon -->
+      <div id="entityRibbon" class="mx-4 text-center">
+        <span id="entityName" class="font-semibold"></span>
+      </div>
+      
       </div>
       <div class="grid gap-4">
+      <!-- <p class="text-slate-500">Pilih menu untuk memulai</p> -->
         <!-- Kartu: Catat Imunisasi -->
         <div id="cardGoImmunize" class="card p-5 cursor-pointer transition ring-0 hover:ring-2 hover:ring-indigo-200 group" role="button" tabindex="0" aria-label="Buka Catat Imunisasi">
           <div class="flex items-start gap-4">
@@ -474,11 +489,10 @@
     </div>
     <div class="flex gap-2 shrink-0">
       <button id="btnDraftDiscard" class="btn btn-ghost">Buang Draft</button>
-      <button id="btnDraftSubmit" class="btn btn-primary">Submit &amp; Simpan</button>
+      <button id="btnDraftSubmit" class="js-confirm-submit btn btn-primary">Submit &amp; Simpan</button>
     </div>
   </div>
 </div>
-
         <!-- HIGHLIGHT: Program Completeness (IDL / IBL / ISL / IRL) -->
           <!-- Tab bar -->
     <div class="mt-5 card">
@@ -539,6 +553,7 @@
       </div>
       <h2 class="text-3xl font-extrabold text-slate-900">Input Penimbangan</h2>
       <p class="text-slate-500" id="w-child">-</p>
+      <p id="w-info" class="hidden mt-2 text-violet-700 bg-violet-50 rounded-lg px-3 py-2 text-sm">Anda sedang menginput penimbangan ketika lahir.</p>
       <div class="card p-6 mt-4">
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -651,6 +666,16 @@
           }
         });
       }
+      // Nama entitas terpusat
+      const ENTITY_NAME = 'PUSKESMAS DEPOK I';
+
+      // Pastikan ribbon selalu ada & update text-nya
+      (function ensureEntityRibbon(){
+        const ribbon = document.getElementById('entityRibbon');
+        if (!ribbon) return;
+        const span = ribbon.querySelector('#entityName');
+        if (span) span.textContent = ENTITY_NAME;
+      })();
       // Arahkan ke halaman yang sesuai
       makeCardLink('cardGoImmunize', () => {
         // pakai halaman input NIK yang sudah ada
@@ -874,6 +899,137 @@
         }
       };
       loadDB();
+// ====== DRAFT STORE (localStorage) ======
+const Drafts = {
+  keyVax(nik){ return `drafts:vax:${nik}`; },
+  keyMeas(nik){ return `drafts:meas:${nik}`; },
+  _load(key){ try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ return []; } },
+  _save(key, arr){ localStorage.setItem(key, JSON.stringify(arr)); },
+  loadVax(nik){ return this._load(this.keyVax(nik)); },
+  saveVax(nik, arr){ this._save(this.keyVax(nik), arr); },
+  upsertVax(nik, antigenId, patch){
+    const arr = this.loadVax(nik);
+    const idx = arr.findIndex(d => d.antigenId === antigenId);
+    const base = { id: ('d'+Math.random().toString(36).slice(2,9)), nik, antigenId, createdAt: Date.now() };
+    const draft = idx>=0 ? Object.assign({}, arr[idx], patch, {updatedAt: Date.now()}) : Object.assign({}, base, patch, {updatedAt: Date.now()});
+    if (idx>=0) arr[idx] = draft; else arr.push(draft);
+    this.saveVax(nik, arr);
+  },
+  removeVax(nik, antigenId){
+    const arr = this.loadVax(nik).filter(d => d.antigenId !== antigenId);
+    this.saveVax(nik, arr);
+  },
+  clearVax(nik){ localStorage.removeItem(this.keyVax(nik)); },
+
+  loadMeas(nik){ return this._load(this.keyMeas(nik)); },
+  saveMeas(nik, arr){ this._save(this.keyMeas(nik), arr); },
+  addMeas(nik, draft){
+    const arr = this.loadMeas(nik);
+    arr.push(Object.assign({ id: ('dm'+Math.random().toString(36).slice(2,9)), nik, createdAt: Date.now() }, draft, {updatedAt: Date.now()}));
+    this.saveMeas(nik, arr);
+  },
+  updateMeas(nik, id, patch){
+    const arr = this.loadMeas(nik);
+    const idx = arr.findIndex(d => d.id === id);
+    if (idx >= 0){ arr[idx] = Object.assign({}, arr[idx], patch, {updatedAt: Date.now()}); this.saveMeas(nik, arr); }
+  },
+  getMeas(nik, id){ return (this.loadMeas(nik).find(d => d.id === id) || null); },
+  clearMeas(nik){ localStorage.removeItem(this.keyMeas(nik)); }
+};
+
+function refreshDraftBanner(){
+  const el = document.getElementById('draft-banner');
+  if (!currentChild || !el) return;
+  const nik = currentChild.nik;
+  const vx = Drafts.loadVax(nik);
+  const ms = Drafts.loadMeas(nik);
+  const total = vx.length + ms.length;
+  if (total === 0){ el.classList.add('hidden'); return; }
+  const summary = [];
+  if (vx.length) summary.push(vx.length + ' draft imunisasi');
+  if (ms.length) summary.push(ms.length + ' draft penimbangan');
+  document.getElementById('draft-summary').textContent = summary.join(' · ');
+  el.classList.remove('hidden');
+
+  const discard = document.getElementById('btnDraftDiscard');
+  const submit  = document.getElementById('btnDraftSubmit');
+  if (discard && !discard._wired){
+    discard._wired = true;
+    discard.onclick = () => {
+      if (!confirm('Buang semua draft untuk anak ini?')) return;
+      Drafts.clearVax(nik);
+      Drafts.clearMeas(nik);
+      refreshDraftBanner();
+      renderVaxList();
+      renderMeasureList();
+    };
+  }
+  if (submit && !submit._wired){
+    submit._wired = true;
+    submit.onclick = () => submitAllDrafts();
+  }
+}
+
+// Commit drafts to DB (simulasi)
+function submitAllDrafts(){
+  const nik = currentChild?.nik;
+  if (!nik) return;
+  const vx = Drafts.loadVax(nik);
+  const ms = Drafts.loadMeas(nik);
+  const errors = [];
+
+  vx.forEach(d => {
+    const rule = RULES.find(r=>r.id===d.antigenId);
+    if (!rule){ errors.push(`Antigen tidak dikenal: ${d.antigenId}`); return; }
+    if (d.type === 'not_given'){
+      currentChild.records[d.antigenId] = { notGiven: true };
+      return;
+    }
+    const dateISO = d.date;
+    const w = validateDateWindow(d.antigenId, dateISO);
+    if (!w.ok){ errors.push(`${rule.label}: ${w.msg}`); return; }
+    const inter = validateInterval(d.antigenId, dateISO);
+    if (!inter.ok){ errors.push(`${rule.label}: ${inter.msg}`); return; }
+    if (d.batch){
+      const arr = DB.batches[d.antigenId] || [];
+      const picked = arr.find(x => x.code === d.batch);
+      if (!picked || !picked.active || picked.dosesRemaining <=0 || picked.exp < todayISO()){
+        errors.push(`${rule.label}: batch tidak valid.`); return;
+      }
+      picked.dosesRemaining--;
+      currentChild.records[d.antigenId] = { date: dateISO, batch: d.batch };
+    } else {
+      currentChild.records[d.antigenId] = dateISO;
+    }
+  });
+
+  ms.forEach(m => {
+    const entry = { type: m.kind || 'visit', date: m.date, weight: m.weight, height: m.height, sex: currentChild.sex };
+    if (!entry.date || !isFinite(entry.weight) || !isFinite(entry.height)){
+      errors.push('Draft penimbangan tidak lengkap.');
+      return;
+    }
+    currentChild.measures = currentChild.measures || [];
+    if (entry.type === 'birth') {
+      const idx = currentChild.measures.findIndex(x => x.type === 'birth');
+      if (idx >= 0) currentChild.measures[idx] = entry; else currentChild.measures.push(entry);
+    } else {
+      currentChild.measures.push(entry);
+    }
+  });
+
+  if (errors.length){
+    alert('Beberapa draft gagal disubmit:\\n- ' + errors.join('\\n- '));
+    return;
+  }
+  saveDB();
+  Drafts.clearVax(nik);
+  Drafts.clearMeas(nik);
+  refreshDraftBanner();
+  renderProgramChips();
+  renderVaxList();
+  renderMeasureList();
+}
       // ====== RULES (disingkat) ======
       const RULES = [
         // RUTIN — Bayi/BBL/SI
@@ -1480,6 +1636,7 @@
   renderProgramChips();
   renderVaxList();
   renderMeasureList();
+  refreshDraftBanner();
   byId('btnAddMeasure').onclick = () => openWeigh('visit');
 }
 
@@ -1656,7 +1813,9 @@ function initTabs() {
             return `
               <span class="badge b-green">${st.text || 'Jadwal Ideal'}</span>`;
           case 'kejar':
-            return `<span class="badge b-amber">Jadwal Kejar</span>`;
+            // Ditandai jelas sebagai "Kejar"
+            return `
+              <span class="badge b-amber">${st.text || 'Jadwal Kejar'}</span>`;
           case 'due':
             return `
               <span class="badge b-amber">Belum Dicatat</span>`;
@@ -1764,37 +1923,30 @@ function initTabs() {
 
       function renderProgramChips() {
   // daftar antigen per paket
-        const idlList  = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'];
-        const iblList  = ['pentabio4','mr2'];
-        const biasList = ['mr_school','dt_school','td_school_2','td_school_5'];
-        const irlList  = ['td_school_5'];
+  const idlList  = ['hb0_1','bcg1','opv1','opv2','opv3','opv4','pentabio1','pentabio2','pentabio3','ipv1','mr1'];
+  const iblList  = ['pentabio4','mr2'];
+  const biasList = ['mr_school','dt_school','td_school_2','td_school_5'];
+  // Untuk IRL kita anggap titik akhir program (kelas 5/Td) – bergantung BIAS
+  const irlList  = ['td_school_5'];
 
   // hitung state per paket
-        const idlState  = evalPackage(idlList,  { needsWindow:'IDL' });
-        const iblState  = evalPackage(iblList,  { needsWindow:'IBL', requires: ()=>idlState });
+  const idlState  = evalPackage(idlList,  { needsWindow:'IDL' });
+  const iblState  = evalPackage(iblList,  { needsWindow:'IBL', requires: ()=>idlState });
   const biasState = evalPackage(biasList, { /* tanpa window usia */ });
-        const irlState  = evalPackage(irlList,  { requires: ()=>biasState });
+  const irlState  = evalPackage(irlList,  { requires: ()=>biasState });
 
   // helper set chip
-        const setChip = (chipId, state) => {
-          const el = byId(chipId);
-          if (!el) return;
-          const row = el.parentElement;
-
-    // Tampilkan baris hanya jika YES atau NO_PAST (gagal karena usia paket sudah lewat)
-          if (state === 'YES' || state === 'NO_PAST') {
-            row.style.display = '';
-          } else {
-      row.style.display = 'none';       // PENDING / NO (belum waktunya) disembunyikan
-    }
-
-    if (state === 'YES') {
-      el.textContent = 'Ya';
-      el.className = 'badge b-green';
+  const setChip = (chipId, state) => {
+    const el = byId(chipId);
+    if (!el) return;
+    const row = el.parentElement; // baris <div class="flex items-center ...">
+    // Tampilkan HANYA untuk YES dan NO_PAST. NO/PENDING disembunyikan.
+    if (state === 'YES' || state === 'NO_PAST') {
+      row.style.display = '';
+      el.textContent = (state === 'YES') ? 'Ya' : 'Tidak';
+      el.className = (state === 'YES') ? 'badge b-green' : 'badge b-amber';
     } else {
-      // NO_PAST dirender “Tidak” (kuning) agar terlihat kenapa kartu tetap muncul
-      el.textContent = 'Tidak';
-      el.className = 'badge b-amber';
+      row.style.display = 'none';
     }
   };
 
@@ -1803,14 +1955,14 @@ function initTabs() {
   setChip('chip-bias', biasState);
   setChip('chip-irl',  irlState);
 
-  // Tampilkan kartu bila minimal ada 1 paket YES atau NO_PAST
+  // --- LOGIKA tampil/sembunyi kartu "Kelengkapan Imunisasi" ---
   const progWrap = byId('program-completeness');
-  if (progWrap) {
-    const states = [idlState, iblState, biasState, irlState];
-    const show = states.some(s => s === 'YES' || s === 'NO_PAST');
-    progWrap.style.display = show ? '' : 'none';
-  }
-} //  <<— penting: kurung penutup sebelum “LIST VAKSIN”
+  if (!progWrap) return;
+
+  const show = [idlState, iblState, biasState, irlState]
+    .some(s => s === 'YES' || s === 'NO_PAST');
+  progWrap.style.display = show ? '' : 'none';
+}
 
       // ====== LIST VAKSIN ======
       function renderVaxList() {
@@ -1833,6 +1985,7 @@ function initTabs() {
           }
           // record object (could be string date, object with date/batch, or {notGiven:true})
           const rec = currentChild.records[rule.id] || null;
+          const draft = Drafts.loadVax(currentChild.nik).find(d=>d.antigenId===rule.id) || null;
           const hasRecord = Boolean(rec);
           // ❗ Sembunyikan antigen yang BELUM masuk jadwal ideal (status 'hidden')
           // selama belum ada catatan (tanggal / tidak diberikan).
@@ -1859,6 +2012,7 @@ function initTabs() {
                               
                   </div>
                   <p class="text-sm text-slate-500">Jadwal ideal: ${fmtID(idealDate)}</p>
+                ${(draft && draft.type!=="not_given") && !hasDate ? `<div class='text-xs text-amber-700 mt-1'>Draft Penyuntikan: ${fmtID(draft.date)}${draft.batch?` · Batch: <b>${draft.batch}</b>`:""}</div>` : ""}
           ${(()=>{
             // small rule hint: kejar end and interval summary
             let hints = [];
@@ -1884,6 +2038,8 @@ function initTabs() {
                   <div class='text-sm text-slate-600 mt-1'>Tanggal penyuntikan: ${fmtID(st.date)}${st.batch?` · Batch: 
                                 
                     <b>${st.batch}</b>`:''}
+                ${(draft && draft.type!=='not_given') ? `
+                  <div class='text-xs text-amber-700 mt-1'>Draft Penyuntikan: ${fmtID(draft.date)}${draft.batch?` · Batch: <b>${draft.batch}</b>`:''}</div>` : ''}
                               
                   </div>` : ''}
           
@@ -2109,13 +2265,9 @@ function initTabs() {
           if (btnNotGivenExt) {
             btnNotGivenExt.addEventListener('click', (e) => {
               e.preventDefault();
-              if (!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return;
-              currentChild.records[rule.id] = {
-                notGiven: true
-              };
-              saveDB();
-              refreshListIfVisible();
-              renderProgramChips();
+              if (!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN sebagai DRAF?')) return;
+              Drafts.upsertVax(currentChild.nik, rule.id, { type:'not_given' });
+              refreshDraftBanner();
               renderVaxList();
             });
           }
@@ -2127,13 +2279,9 @@ function initTabs() {
           if (btnNotGiven) {
             btnNotGiven.addEventListener('click', (e) => {
               e.preventDefault();
-              if (!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN?\nIni akan menyimpan catatan bahwa vaksin tidak diberikan dan tidak dihitung pada kelengkapan.')) return;
-              currentChild.records[rule.id] = {
-                notGiven: true
-              };
-              saveDB();
-              refreshListIfVisible();
-              renderProgramChips();
+              if (!confirm('Tandai vaksin ini sebagai TIDAK DIBERIKAN sebagai DRAF?')) return;
+              Drafts.upsertVax(currentChild.nik, rule.id, { type:'not_given' });
+              refreshDraftBanner();
               renderVaxList();
             });
           }
@@ -2176,10 +2324,8 @@ function initTabs() {
               };
             }
             // If previously marked notGiven, overwrite with actual date record
-            currentChild.records[rule.id] = payload;
-            saveDB();
-            refreshListIfVisible();
-            renderProgramChips();
+            Drafts.upsertVax(currentChild.nik, rule.id, { type:'record', date: d, batch: (useBatch? (batchSelect.value||null): null) });
+            refreshDraftBanner();
             renderVaxList();
           };
         });
@@ -2207,22 +2353,51 @@ if (byId('s-done')) byId('s-done').textContent = idealCount;
         let html = '';
         if (!hasBirth) {
           html += `      
-                <div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800 text-sm flex items-start justify-between">
+                <div class="rounded-2xl border px-4 py-3 bg-sky-50 border-sky-200 text-sky-800 text-sm flex items-start justify-between">
                   <div>
                     <b>Belum ada penimbangan saat lahir.</b>
                     <br/>
-                    <span class="text-amber-700">Tambahkan untuk baseline pertumbuhan.</span>
+                    <span class="text-slate-700">Tambahkan untuk baseline pertumbuhan.</span>
                   </div>
                   <button id="btnBirth" class="btn btn-primary ml-3">+ Tambah</button>
                 </div>`;
         }
         if (!data.length) {
   html += `<p class="text-slate-500 text-sm">Belum ada riwayat penimbangan</p>`;
-  wrap.innerHTML = html;
-  if (!hasBirth) byId('btnBirth').onclick = () => openWeigh('birth');
-  return;
 }
+
+wrap.innerHTML = html;
+if (!hasBirth) byId('btnBirth').onclick = () => openWeigh('birth');
         wrap.innerHTML = html;
+        // ---- render measurement drafts ----
+        (Drafts.loadMeas(currentChild.nik) || []).forEach(d => {
+          const row = document.createElement('div');
+          row.className = 'rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 mb-2 flex items-start justify-between';
+          row.innerHTML = `
+            <div class="text-sm">
+              <div><span class="text-amber-700">Draft Penimbangan</span></div>
+              <div class="text-xs text-slate-600 mt-1">Tanggal: ${fmtID(d.date)} · Berat: <b>${d.weight ?? '-'} </b> kg · Tinggi: <b>${d.height ?? '-'}</b> cm</div>
+            </div>
+            <div class="flex gap-3 mt-1">
+              <button class="btn btn-ghost text-sm" data-edit-mdraft="${d.id}">Edit</button>
+            </div>`;
+          wrap.appendChild(row);
+        });
+        wrap.querySelectorAll('[data-del-mdraft]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-del-mdraft');
+            const arr = Drafts.loadMeas(currentChild.nik).filter(x => x.id !== id);
+            Drafts.saveMeas(currentChild.nik, arr);
+            refreshDraftBanner();
+            renderMeasureList();
+          });
+        });
+        wrap.querySelectorAll('[data-edit-mdraft]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-edit-mdraft');
+            openWeighDraft(id);
+          });
+        });
         if (!hasBirth) {
           byId('btnBirth').onclick = () => openWeigh('birth');
         }
@@ -2236,8 +2411,8 @@ if (byId('s-done')) byId('s-done').textContent = idealCount;
                 <div class="flex items-start justify-between">
                   <div>
                     <div class="font-medium text-slate-800">${fmtID(m.date)} ${m.type === 'birth' ? `
-                      <span class="ml-2 badge b-amber">Lahir</span>` : ``}
-                                  
+                      <span class="ml-2 badge b-amber">Lahir</span>
+                      ` : ``}
                     </div>
                     <div class="text-sm text-slate-600">BB: 
                                     
@@ -2279,6 +2454,8 @@ if (byId('s-done')) byId('s-done').textContent = idealCount;
         dateEl.value = d;
         dateEl.disabled = isBirth;
         byId('w-sex').value = currentChild.sex || 'M';
+        const infoEl = byId('w-info');
+        if (infoEl) { if (isBirth) { infoEl.classList.remove('hidden'); } else { infoEl.classList.add('hidden'); } }
         updateWeighPreview();
         byId('w-date').oninput = updateWeighPreview;
         byId('w-weight').oninput = updateWeighPreview;
@@ -2296,32 +2473,13 @@ if (byId('s-done')) byId('s-done').textContent = idealCount;
             alert('Lengkapi tanggal, berat, dan tinggi.');
             return;
           }
-          currentChild.measures = currentChild.measures || [];
-          if (isBirthSave) {
-            const idx = (currentChild.measures || []).findIndex(m => m.type === 'birth');
-            const entry = {
-              type: 'birth',
-              date,
-              weight,
-              height,
-              sex: currentChild.sex
-            };
-            if (idx >= 0) currentChild.measures[idx] = entry;
-            else currentChild.measures.push(entry);
-          } else {
-            currentChild.measures.push({
-              type: 'visit',
-              date,
-              weight,
-              height
-            });
-          }
-          saveDB();
-          refreshListIfVisible();
+          if (window._editingMeasDraftId) { Drafts.updateMeas(currentChild.nik, window._editingMeasDraftId, { kind: isBirthSave?'birth':'visit', date, weight, height }); } else { Drafts.addMeas(currentChild.nik, { kind: isBirthSave?'birth':'visit', date, weight, height }); }
           byId('w-weight').value = '';
           byId('w-height').value = '';
           byId('w-date').disabled = false;
           nav('child');
+          window._editingMeasDraftId = null;
+          refreshDraftBanner();
           renderMeasureList();
         };
       }
@@ -2808,6 +2966,64 @@ if (byId('s-done')) byId('s-done').textContent = idealCount;
         updateAuthUI(true);
         nav('hub'); // ← menuju landing baru
       }
-    </script>
+    
+
+window._editingMeasDraftId = null;
+function openWeighDraft(id){
+  const d = Drafts.getMeas(currentChild.nik, id);
+  if (!d) return;
+  window._editingMeasDraftId = id;
+  openWeigh(d.kind || 'visit');
+  setTimeout(()=>{
+    const w = byId('w-weight'); const h = byId('w-height'); const dt = byId('w-date');
+    if (w) w.value = d.weight ?? '';
+    if (h) h.value = d.height ?? '';
+    if (dt) { dt.disabled = false; dt.value = d.date || todayISO(); }
+  }, 0);
+}
+
+
+function openWeighBirthEdit(){
+  const birth = (currentChild.measures || []).find(m => m.type === 'birth') || null;
+  openWeigh('birth');
+  setTimeout(() => {
+    const w = byId('w-weight'); const h = byId('w-height'); const dt = byId('w-date');
+    if (birth){ if (w) w.value = birth.weight ?? ''; if (h) h.value = birth.height ?? ''; if (dt) dt.value = birth.date || currentChild.dob; }
+  }, 0);
+}
+
+function attachConfirmToSubmitButtons() {
+    // Tangani semua tombol berkelas js-confirm-submit
+    document.querySelectorAll('.js-confirm-submit').forEach(btn => {
+      if (btn.dataset.confirmBound) return; // hindari double bind
+      btn.dataset.confirmBound = '1';
+
+      btn.addEventListener('click', function (e) {
+        const ok = window.confirm('Apakah Anda yakin akan submit & simpan draft?');
+        if (!ok) {
+          // batal
+          return;
+        }
+        // Jika tombol sebelumnya memicu submit form, jalankan manual:
+        // 1) Kalau tombol ada di dalam form:
+        const form = btn.closest('form');
+        if (form && btn.type !== 'button') {
+          form.requestSubmit ? form.requestSubmit(btn) : form.submit();
+        } else {
+          // 2) Jika ada handler JS custom di tempat lain, biarkan event terus bubble:
+          // Tidak memanggil preventDefault agar handler lain tetap berjalan.
+        }
+      }, {capture: true}); // capture true agar konfirmasi jalan sebelum handler lain
+    });
+  }
+
+  // Jalankan saat DOM siap
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachConfirmToSubmitButtons);
+  } else {
+    attachConfirmToSubmitButtons();
+  }
+
+</script>
   </body>
 </html>
